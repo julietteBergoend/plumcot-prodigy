@@ -6,7 +6,6 @@ from typing import Dict, List, Text
 import random
 import os
 
-# test
 def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     """Remove (heavy) "video" key from examples before saving to Prodigy database
 
@@ -30,78 +29,79 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
 def stream():
 
     forced_alignment = ForcedAlignment()
- 
+
     # gather all episodes of all series together
     all_episodes_series = ""
     # path to series directories
     path = "/vol/work/lerner/pyannote-db-plumcot/Plumcot/data"
-    # list containing all the series names
-    all_series = ["TheBigBangTheory"] 
 
+    # series names
+    with open("/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data/series.txt") as series_file :
+        series = series_file.read()
+    all_series = [serie.split(",")[0] for serie in series.split('\n') if serie != '']
+    
     # series path
     all_series_paths = [os.path.join(path, name) for name in all_series]
     
-    # read episodes.txt of each serie containing episodes list
+    # read file_list.txt of each serie containing existing episodes list
     for serie_name in all_series_paths:
-        with open("/vol/work1/bergoend/episodes.txt") as file:  
+        with open(os.path.join(serie_name,"file_list.txt")) as file:  
             episodes_file = file.read() 
             all_episodes_series += episodes_file
     
-    # final list of all episodes
-    #episodes_list = [episode.split(',')[0] for episode in all_episodes_series.split('\n')]
-    episodes_list = ["TheBigBangTheory.Season01.Episode04", "TheBigBangTheory.Season01.Episode05"]
+    # final list of all episodes (season x)
+    episodes_list = [episode.split(',')[0] for episode in all_episodes_series.split('\n') if 'Season01.' in episode]
+    #episodes_list = ["TheBigBangTheory.Season01.Episode04", "TheBigBangTheory.Season01.Episode05"]
     
-    for episode in episodes_list:    
+    for episode in episodes_list:
+        print("Episode en cours", episode)
+
         series, _, _ = episode.split('.')
 
         # path to mkv -- hardcoded for now
-        mkv = f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv"
+        if os.path.isfile(f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv") : 
+            mkv = f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv"
+        else:
+            mkv = f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv"
 
         # path to forced alignment -- hardcoded for now
         aligned = f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"
-
         # load forced alignment        
         transcript = forced_alignment(aligned)      
         sentences = list(transcript.sents)
 
-        # select the first and the last sentences of the episode
-        sentence_begining = sentences[0]
-        sentence_end = sentences[-1]
+        # choose first and last sentences based on time length            
+        begining_sentences  = {i : i._.end_time-i._.start_time for i in sentences[0:10]}
+        ending_sentences = {i : i._.end_time-i._.start_time for i in sentences[-10:]}
+        max_beg_sentence = max(begining_sentences, key=begining_sentences.get)
+        max_end_sentence = max(ending_sentences, key=ending_sentences.get)
 
         # load its attributes from forced alignment
-        speaker = sentence_begining._.speaker
-        print(speaker)
-        start_time_b = sentence_begining._.start_time
-        print(start_time_b)
-        end_time_b = sentence_begining._.end_time
-        print(end_time_b)
+        speaker = max_beg_sentence._.speaker
+        start_time_b = max_beg_sentence._.start_time
+        end_time_b = max_beg_sentence._.end_time
 
         # extract corresponding video excerpt
         video_excerpt_b = mkv_to_base64(mkv, start_time_b, end_time_b)
 
         yield {
-            "video": video_excerpt_b,
-            "text": f"{speaker}: {sentence_begining}",
-            "meta": {"start": start_time_b, "end": end_time_b, "episode": episode},
-        }
-
+                    "video": video_excerpt_b,
+                    "text": f"{speaker}: {max_beg_sentence}",
+                    "meta": {"start": start_time_b, "end": end_time_b, "episode": episode, "mkv_path": mkv},
+                }
         # load its attributes from forced alignment
-        speaker = sentence_end._.speaker
-        print(speaker)
-        start_time = sentence_end._.start_time
-        print(start_time)
-        end_time = sentence_end._.end_time
-        print(end_time)
+        speaker = max_end_sentence._.speaker
+        start_time = max_end_sentence._.start_time
+        end_time = max_end_sentence._.end_time
 
         # extract corresponding video excerpt
         video_excerpt_e = mkv_to_base64(mkv, start_time, end_time)
-        #print("Extrait video", type(video_excerpt))
 
         yield {
-            "video": video_excerpt_e,
-            "text": f"{speaker}: {sentence_end}",
-            "meta": {"start": start_time, "end": end_time, "episode": episode},
-        }
+                    "video": video_excerpt_e,
+                    "text": f"{speaker}: {max_end_sentence}",
+                    "meta": {"start": start_time, "end": end_time, "episode": episode, "mkv_path": mkv},
+                }
 
 
 @prodigy.recipe(
