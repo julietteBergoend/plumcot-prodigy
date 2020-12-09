@@ -107,11 +107,10 @@ def stream():
                     "meta": {"start": start_time, "end": end_time, "episode": episode, "mkv_path": mkv},
                 }
         
-"""        
-def stream_chars():
+def stream_char():
 
     forced_alignment = ForcedAlignment()
-    
+
     # gather all episodes of all series together
     all_episodes_series = ""
     # path to series directories
@@ -127,7 +126,7 @@ def stream_chars():
     
     # read file_list.txt of each serie containing existing episodes list
     for serie_name in all_series_paths:
-        with open(os.path.join(serie_name,"file_list.txt")) as file:  
+        with open(os.path.join(serie_name,"episodes.txt")) as file:  
             episodes_file = file.read() 
             all_episodes_series += episodes_file
     
@@ -143,35 +142,40 @@ def stream_chars():
         # path to mkv -- hardcoded for now
         if os.path.isfile(f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv") : 
             mkv = f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv"
-        else:
+            print(mkv)
+        elif os.path.isfile(f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv") :
             mkv = f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv"
+            print(mkv)
+        else:
+            print("pas de chemin trouvé")
+            continue
 
         # path to forced alignment -- hardcoded for now
-        aligned = f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"
+        if os.path.isfile(f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"):
+            aligned = f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"
+        else:
+            continue
+            
         # load forced alignment        
         transcript = forced_alignment(aligned)      
         sentences = list(transcript.sents)
-
-        sentence = random.choice(sentences)
-
-        # load its attributes from forced alignment
+        
+        sentences_choice = [sentence for sentence in sentences if sentence._.speaker == "not_available"]
+        sentence = random.choice(sentences_choice)
+        
         speaker = sentence._.speaker
         start_time = sentence._.start_time
-        end_time = sentence._.end_time
+        end_time= sentence._.end_time
 
         # extract corresponding video excerpt
         video_excerpt = mkv_to_base64(mkv, start_time, end_time)
 
-        # Load the directory of audio files and add options to each task
-        stream = Video(video_excerpt)
-        for eg in stream:
-            eg["options"] = [
-                {"id": "CAR", "text": "🚗 Car"},
-                {"id": "PLANE", "text": "✈️ Plane"},
-                {"id": "OTHER", "text": "Other / Unclear"}
-            ]
-            yield eg
-"""
+        yield {
+                            "video": video_excerpt,
+                           "speaker": f"{speaker}",
+                            "text": f"{sentence}",
+                           "meta": {"start": start_time, "end": end_time, "episode": episode, "mkv_path": mkv},
+                       }      
 
 @prodigy.recipe(
     "check_forced_alignment",
@@ -227,16 +231,16 @@ def select_char(dataset):
 def add_options(stream):
     # Helper function to add options to every task in a stream
     options = [
-            {"id": "happy", "text": "😀 happy"},
-            {"id": "sad", "text": "😢 sad"},
-            {"id": "angry", "text": "😠 angry"},
-            {"id": "neutral", "text": "😶 neutral"},
+{"id": "miss doe", "image": "https://m.media-amazon.com/images/M/MV5BYTEzZGQyMjQtMDkwMC00ZWI4LWEzODAtM2QxMjdmY2QyNDYzXkEyXkFqcGdeQXVyMDk0ODI3OA@@._V1_SY200_SX300_AL_.jpg", "style": {"width": "7px" }},
+{"id": "mister doe", "image": "https://m.media-amazon.com/images/M/MV5BZTFlYzk0YTgtZWZkMi00M2Q3LTkzNDMtYmFlZGQxMDhmYjk4XkEyXkFqcGdeQXVyMDk0ODI3OA@@._V1_SY484_SX324_AL_.jpg", "style": {"width": "7px" }},
+{"id": "jane doe", "image": "https://m.media-amazon.com/images/M/MV5BY2MzZTg1OTYtMmMwYy00OWNmLTliYjItNzM5YzYyODhlMDE0XkEyXkFqcGdeQXVyNjYwODk4Mg@@._V1_.jpg", "style": {"width": "7px" }},
+{"id": "john doe", "image": "https://m.media-amazon.com/images/M/MV5BNzFhM2FmMGYtYjY5Zi00ODViLWFmZDctNWYwNGUyYWQ5ZTkzXkEyXkFqcGdeQXVyMDk0ODI3OA@@._V1_SY500_SX750_AL_.jpg", "style": {"width": "7px" }},
         ]
     for task in stream:
         task["options"] = options
         yield task
         
-stream = stream()    # load in the JSONL file
+stream = stream_char() 
 stream = add_options(stream)  # add options to each task
 
 
