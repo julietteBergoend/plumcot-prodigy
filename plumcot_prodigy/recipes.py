@@ -47,7 +47,7 @@ def stream():
     
     # read file_list.txt of each serie containing existing episodes list
     for serie_name in all_series_paths:
-        with open(os.path.join(serie_name,"file_list.txt")) as file:  
+        with open(os.path.join(serie_name,"episodes.txt")) as file:  
             episodes_file = file.read() 
             all_episodes_series += episodes_file
     
@@ -60,14 +60,22 @@ def stream():
 
         series, _, _ = episode.split('.')
 
-        # path to mkv -- hardcoded for now
+        # path to mkv
         if os.path.isfile(f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv") : 
             mkv = f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv"
-        else:
+        elif os.path.isfile(f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv") :
             mkv = f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv"
+        else:
+            print("No mkv file for", episode)
+            yield {"No mkv file for :" : episode}
 
         # path to forced alignment -- hardcoded for now
-        aligned = f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"
+        if os.path.isfile(f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"):
+            aligned = f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"
+        else:
+            print("No aligned file for", episode)
+            yield {"No aligned file for :" : episode}
+            
         # load forced alignment        
         transcript = forced_alignment(aligned)      
         sentences = list(transcript.sents)
@@ -117,7 +125,7 @@ def stream_char():
     path = "/vol/work/lerner/pyannote-db-plumcot/Plumcot/data"
 
     # series names
-    with open("/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data/series.txt") as series_file :
+    with open(os.path.join(path, "series.txt")) as series_file :
         series = series_file.read()
     all_series = [serie.split(",")[0] for serie in series.split('\n') if serie != '']
     
@@ -135,31 +143,54 @@ def stream_char():
     #episodes_list = ["TheBigBangTheory.Season01.Episode04", "TheBigBangTheory.Season01.Episode05"]
     
     for episode in episodes_list:
-        print("Episode en cours", episode)
+        print("Current episode", episode)
 
         series, _, _ = episode.split('.')
 
-        # path to mkv -- hardcoded for now
+        # path to mkv
         if os.path.isfile(f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv") : 
             mkv = f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv"
-            print(mkv)
         elif os.path.isfile(f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv") :
             mkv = f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv"
-            print(mkv)
         else:
-            print("pas de chemin trouvé")
-            continue
+            print("No mkv file for", episode)
+            yield {"No mkv file for :" : episode}
 
         # path to forced alignment -- hardcoded for now
-        if os.path.isfile(f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"):
-            aligned = f"/vol/work/lerner/pyannote-db-plumcot/Plumcot/data/{series}/forced-alignment/{episode}.aligned"
+        if os.path.isfile(os.path.join(path,f"{series}/forced-alignment/{episode}.aligned")):
+            aligned = os.path.join(path,f"{series}/forced-alignment/{episode}.aligned")
         else:
-            continue
+            print("No aligned file for", episode)
+            yield {"No aligned file for :" : episode}    
+            
+        # path to credits
+        with open(os.path.join(path, f"{series}/credits.txt")) as f_c:
+            credits = f_c.read()
+                  
+        # path to characters
+        with open(os.path.join(path,f"{series}/characters.txt")) as f_ch:
+            characters = f_ch.read()
+                  
+        characters_list = [char.split(',')[0] for char in characters.split('\n') if char != '']
+        print(len(characters_list), f"characters in {series}")
+        
+        # credits per episodes
+        credits_dict = {episode.split(',')[0] : episode.split(',')[1:] for episode in credits.split('\n')}
+
+        final_dict = {}
+        for ep, credit in credits_dict.items():
+            #print("\nEPISODE", episode,)
+            final_dict[ep] = [ch for ch, cr in zip(characters_list, credit) if cr == "1"]   
+        
+        # credits for the current episode
+        episode_characters = final_dict[episode]
+        print("\nCharacters for this episode :", episode_characters)
             
         # load forced alignment        
         transcript = forced_alignment(aligned)      
         sentences = list(transcript.sents)
-        
+
+        # select sentences with non available characters
         sentences_choice = [sentence for sentence in sentences if sentence._.speaker == "not_available"]
         sentence = random.choice(sentences_choice)
         
