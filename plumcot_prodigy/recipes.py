@@ -7,6 +7,26 @@ from typing import Dict, List, Text
 
 import random
 import os
+import json
+
+def choose_char(characters, serie_uri, path):
+    with open(os.path.join(path, f"{serie_uri}/images/images.json")) as f:
+        data = json.load(f)
+    char_pictures = {}
+    for dic in data['allImages']:
+        #print(type(dic))
+        #print(dic.keys())
+        if 'label' in dic.keys():
+            #print(dic)
+            #print(dic['label'])
+            for character in characters:                
+                if character in dic['label'] and len(dic['label']) ==1:
+                    #print("PERSONNAGE TROUVE", character, dic['label'], type(dic['label']))
+                    char_pictures[character] = path + dic['path'][0]
+                    
+    char_no_pictures = [char for char in characters if char not in char_pictures.keys() ]
+
+    return char_pictures, char_no_pictures      
 
 def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     """Remove (heavy) "video" key from examples before saving to Prodigy database
@@ -185,6 +205,18 @@ def stream_char():
         # credits for the current episode
         episode_characters = final_dict[episode]
         print("\nCharacters for this episode :", episode_characters)
+        
+        pictures, no_pictures = choose_char(episode_characters, series, path)
+        #print("Pictures for :", pictures)
+        #print(len(pictures), len(episode_characters))
+        #print("No pictures for :", no_pictures)
+        
+        options = []
+        for el in pictures.items():
+            options.append({"id":el[0], "image":el[1]})
+        for el in no_pictures:
+            options.append({"id":el, "text": el})
+        print(options)
             
         # load forced alignment        
         transcript = forced_alignment(aligned)      
@@ -205,6 +237,9 @@ def stream_char():
                             "video": video_excerpt,
                            "speaker": f"{speaker}",
                             "text": f"{sentence}",
+                            "pictures" : pictures,
+                            "no_pictures" : no_pictures,
+                            "options" : options,
                            "meta": {"start": start_time, "end": end_time, "episode": episode, "mkv_path": mkv},
                        }      
 
@@ -237,7 +272,21 @@ def plumcot_video(dataset: Text) -> Dict:
     #file_path=("Path to texts", "positional", None, str),
 )
 def select_char(dataset):
-  
+    
+    #def add_options(stream):
+    
+        #dictionary = next(stream)
+
+        # List of options
+        #options = dictionary['options']
+        #print(options)
+
+        #for task in stream:
+            #task["options"] = options
+            #yield task
+        
+    stream = stream_char() 
+    #stream = add_options(stream)  # add options to each task
 
     return {
         "dataset": dataset,   # save annotations in this dataset
@@ -259,20 +308,6 @@ def select_char(dataset):
         
     }
 
-def add_options(stream):
-    # Helper function to add options to every task in a stream
-    options = [
-{"id": "miss doe", "image": "https://m.media-amazon.com/images/M/MV5BYTEzZGQyMjQtMDkwMC00ZWI4LWEzODAtM2QxMjdmY2QyNDYzXkEyXkFqcGdeQXVyMDk0ODI3OA@@._V1_SY200_SX300_AL_.jpg", "style": {"width": "7px" }},
-{"id": "mister doe", "image": "https://m.media-amazon.com/images/M/MV5BZTFlYzk0YTgtZWZkMi00M2Q3LTkzNDMtYmFlZGQxMDhmYjk4XkEyXkFqcGdeQXVyMDk0ODI3OA@@._V1_SY484_SX324_AL_.jpg", "style": {"width": "7px" }},
-{"id": "jane doe", "image": "https://m.media-amazon.com/images/M/MV5BY2MzZTg1OTYtMmMwYy00OWNmLTliYjItNzM5YzYyODhlMDE0XkEyXkFqcGdeQXVyNjYwODk4Mg@@._V1_.jpg", "style": {"width": "7px" }},
-{"id": "john doe", "image": "https://m.media-amazon.com/images/M/MV5BNzFhM2FmMGYtYjY5Zi00ODViLWFmZDctNWYwNGUyYWQ5ZTkzXkEyXkFqcGdeQXVyMDk0ODI3OA@@._V1_SY500_SX750_AL_.jpg", "style": {"width": "7px" }},
-        ]
-    for task in stream:
-        task["options"] = options
-        yield task
-        
-stream = stream_char() 
-stream = add_options(stream)  # add options to each task
 
-
+ 
 
