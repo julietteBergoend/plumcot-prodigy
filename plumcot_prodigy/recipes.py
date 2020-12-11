@@ -10,20 +10,22 @@ import os
 import json
 
 def choose_char(characters, serie_uri, path):
+    
+    # open json file corresponding to the current show
     with open(os.path.join(path, f"{serie_uri}/images/images.json")) as f:
         data = json.load(f)
+    # dictionary character : url to the character's picture
     char_pictures = {}
+    
     for dic in data['allImages']:
-        #print(type(dic))
-        #print(dic.keys())
+        # character's name is stored in 'label'
         if 'label' in dic.keys():
-            #print(dic)
-            #print(dic['label'])
-            for character in characters:                
-                if character in dic['label'] and len(dic['label']) ==1:
-                    #print("PERSONNAGE TROUVE", character, dic['label'], type(dic['label']))
-                    char_pictures[character] = path + dic['path'][0]
-                    
+            for character in characters:
+                # choose an image with only one character on it
+                if character in dic['label'] and len(dic['label']) ==1 and dic['msrc'] != None:
+                    char_pictures[character] = dic['msrc']
+    
+    # characters with no picture                
     char_no_pictures = [char for char in characters if char not in char_pictures.keys() ]
 
     return char_pictures, char_no_pictures      
@@ -44,6 +46,8 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     for eg in examples:
         if "video" in eg:
             del eg["video"]
+        elif "options" in eg:
+            del eg["options"]
 
     return examples
 
@@ -52,20 +56,20 @@ def stream():
 
     forced_alignment = ForcedAlignment()
 
-    # gather all episodes of all series together
+    # gather all episodes of all shows together
     all_episodes_series = ""
     # path to series directories
     path = "/vol/work/lerner/pyannote-db-plumcot/Plumcot/data"
 
-    # series names
+    # shows' names
     with open("/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data/series.txt") as series_file :
         series = series_file.read()
     all_series = [serie.split(",")[0] for serie in series.split('\n') if serie != '']
     
-    # series path
+    # shows' path
     all_series_paths = [os.path.join(path, name) for name in all_series]
     
-    # read file_list.txt of each serie containing existing episodes list
+    # read episodes.txt of each show containing existing episodes list
     for serie_name in all_series_paths:
         with open(os.path.join(serie_name,"episodes.txt")) as file:  
             episodes_file = file.read() 
@@ -73,7 +77,6 @@ def stream():
     
     # final list of all episodes (season x)
     episodes_list = [episode.split(',')[0] for episode in all_episodes_series.split('\n') if 'Season01.' in episode]
-    #episodes_list = ["TheBigBangTheory.Season01.Episode04", "TheBigBangTheory.Season01.Episode05"]
     
     for episode in episodes_list:
         print("Episode en cours", episode)
@@ -139,20 +142,20 @@ def stream_char():
 
     forced_alignment = ForcedAlignment()
 
-    # gather all episodes of all series together
+    # gather all episodes of all shows together
     all_episodes_series = ""
-    # path to series directories
+    # path to shows directories
     path = "/vol/work/lerner/pyannote-db-plumcot/Plumcot/data"
 
-    # series names
+    # shows' names
     with open(os.path.join(path, "series.txt")) as series_file :
         series = series_file.read()
     all_series = [serie.split(",")[0] for serie in series.split('\n') if serie != '']
     
-    # series path
+    # shows' paths
     all_series_paths = [os.path.join(path, name) for name in all_series]
     
-    # read file_list.txt of each serie containing existing episodes list
+    # read file_list.txt of each show containing existing episodes list
     for serie_name in all_series_paths:
         with open(os.path.join(serie_name,"episodes.txt")) as file:  
             episodes_file = file.read() 
@@ -160,7 +163,6 @@ def stream_char():
     
     # final list of all episodes (season x)
     episodes_list = [episode.split(',')[0] for episode in all_episodes_series.split('\n') if 'Season01.' in episode]
-    #episodes_list = ["TheBigBangTheory.Season01.Episode04", "TheBigBangTheory.Season01.Episode05"]
     
     for episode in episodes_list:
         print("Current episode", episode)
@@ -176,7 +178,7 @@ def stream_char():
             print("No mkv file for", episode)
             yield {"No mkv file for :" : episode}
 
-        # path to forced alignment -- hardcoded for now
+        # path to forced alignment
         if os.path.isfile(os.path.join(path,f"{series}/forced-alignment/{episode}.aligned")):
             aligned = os.path.join(path,f"{series}/forced-alignment/{episode}.aligned")
         else:
@@ -189,41 +191,36 @@ def stream_char():
                   
         # path to characters
         with open(os.path.join(path,f"{series}/characters.txt")) as f_ch:
-            characters = f_ch.read()
-                  
+            characters = f_ch.read()                  
         characters_list = [char.split(',')[0] for char in characters.split('\n') if char != '']
-        print(len(characters_list), f"characters in {series}")
         
         # credits per episodes
         credits_dict = {episode.split(',')[0] : episode.split(',')[1:] for episode in credits.split('\n')}
-
         final_dict = {}
         for ep, credit in credits_dict.items():
-            #print("\nEPISODE", episode,)
             final_dict[ep] = [ch for ch, cr in zip(characters_list, credit) if cr == "1"]   
         
         # credits for the current episode
         episode_characters = final_dict[episode]
-        print("\nCharacters for this episode :", episode_characters)
         
+        # load pictures and characters without one of the current episode
         pictures, no_pictures = choose_char(episode_characters, series, path)
-        #print("Pictures for :", pictures)
-        #print(len(pictures), len(episode_characters))
-        #print("No pictures for :", no_pictures)
         
+        # options to load in the choice box
         options = []
         for el in pictures.items():
             options.append({"id":el[0], "image":el[1]})
+        # display character's name when no picture
         for el in no_pictures:
             options.append({"id":el, "text": el})
-        print(options)
             
         # load forced alignment        
         transcript = forced_alignment(aligned)      
         sentences = list(transcript.sents)
 
         # select sentences with non available characters
-        sentences_choice = [sentence for sentence in sentences if sentence._.speaker == "not_available"]
+        sentences_choice = [sentence for sentence in sentences if sentence._.speaker == "not_available" if str(sentence) != '']
+        
         sentence = random.choice(sentences_choice)
         
         speaker = sentence._.speaker
@@ -272,32 +269,19 @@ def plumcot_video(dataset: Text) -> Dict:
     #file_path=("Path to texts", "positional", None, str),
 )
 def select_char(dataset):
-    
-    #def add_options(stream):
-    
-        #dictionary = next(stream)
-
-        # List of options
-        #options = dictionary['options']
-        #print(options)
-
-        #for task in stream:
-            #task["options"] = options
-            #yield task
         
     stream = stream_char() 
-    #stream = add_options(stream)  # add options to each task
 
     return {
         "dataset": dataset,   # save annotations in this dataset
         "stream": stream,
         "before_db": remove_video_before_db,
-        "view_id": "blocks",  # use the choice interface
+        "view_id": "blocks",  
         "config": {
             "blocks": [                
                 {"view_id": "audio"},
                
-                {"view_id": "choice"},
+                {"view_id": "choice"}, # use the choice interface
             ],
             "audio_loop": True,
             "audio_autoplay": True,
