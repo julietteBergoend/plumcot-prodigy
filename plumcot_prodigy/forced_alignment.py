@@ -66,6 +66,11 @@ class ForcedAlignment:
     def span_end_time(span: Span) -> Text:
         """Compute sentence end time as the maximum of its words end times"""
         return max(token._.end_time for token in span)
+ 
+    @staticmethod
+    def span_average_confidence(span: Span) -> Text:
+        """Compute sentence average confidence"""
+        return sum(token._.confidence for token in span) / len(span)
 
     def __init__(self):
 
@@ -87,6 +92,9 @@ class ForcedAlignment:
 
         if not Span.has_extension("end_time"):
             Span.set_extension("end_time", getter=self.span_end_time)
+            
+        if not Span.has_extension("confidence"):
+            Span.set_extension("confidence", getter=self.span_average_confidence)
 
         # minimalist spaCy pipeline (used only for its tokenizer)
         self.tokenizer = spacy.load(
