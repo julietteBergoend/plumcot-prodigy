@@ -10,6 +10,8 @@ import random
 import os
 import json
 import spacy
+from spacy.symbols import ORTH, LEMMA, POS
+import ast
 
 def choose_char(characters, serie_uri, path):
     
@@ -34,12 +36,10 @@ def choose_char(characters, serie_uri, path):
 
 def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     """Remove (heavy) "video" key from examples before saving to Prodigy database
-
     Parameters
     ----------
     examples : list of dict
         Examples.
-
     Returns
     -------
     examples : list of dict
@@ -313,7 +313,7 @@ def stream_text():
         sorted_confidence_per_sentence = {k: v for k, v in sorted(confidence_per_sentence.items(), key=lambda item: item[1])} 
 
         # select sentences with a confidence lower than x
-        sentences_choice = [sentence[0] for sentence, confidence in sorted_confidence_per_sentence.items() if confidence < 0.3]
+        sentences_choice = [sentence[0] for sentence, confidence in sorted_confidence_per_sentence.items() if confidence > 0.5]
         
         ponct = "\'\"-.,!?"
         #print(ponct.split())
@@ -327,8 +327,8 @@ def stream_text():
                 right = sentences[sentences.index(sentence)+1]
 
                 speaker = sentence._.speaker
-                start_time = sentence._.start_time
-                end_time= sentence._.end_time
+                start_time = left._.start_time
+                end_time= right._.end_time
                 confidence = sentence._.confidence
                 print(sentence, confidence)
 
@@ -339,8 +339,10 @@ def stream_text():
                                     "video": video_excerpt,
                                    "speaker": f"{speaker}",
                                     "text": f"{sentence}",
-                                   "meta": {"confidence": confidence, "left context":str(left), "right context":str(right),
-                                            "start": start_time, "end": end_time, "episode": episode, "mkv_path": mkv},
+                                    "left":str(left),
+                                    "right": str(right),
+                                   "meta": {"confidence": confidence, "start": start_time, 
+                                            "end": end_time, "episode": episode, "mkv_path": mkv},
                                }      
         
 @prodigy.recipe(
@@ -399,32 +401,67 @@ def select_char(dataset):
     dataset=("The dataset to save to", "positional", None, str),
     #file_path=("Path to texts", "positional", None, str),
 )
-def select_text(dataset, lang="en"):
-    nlp = spacy.blank(lang)    
-    stream = stream_text()
-    stream = add_tokens(nlp, stream)
+
+        
+        
+def select_text(dataset, lang="en"):      
+
+    def disable_left_right(stream, lang="en"):   
+        nlp = spacy.blank(lang)
+        
+        for eg in stream :
+            
+            # new token list for ner_manual
+            token_list = []
+            
+            # add tags to left and right contexts
+            left = ' '.join(["<L>" + token.text for token in nlp(str(eg["left"]))])
+            right = ' '.join(["<R>" + token.text for token in nlp(str(eg["right"]))])
+            
+            # gather left and right contexts with initial sentence
+            sentence = eg["text"]
+            text = left + "\n" + sentence + "\n" + right
+  
+            # assign an id to each token for efficient highlighting 
+            tokens = text.split()
+            for (idx, token) in enumerate(tokens):
+                # enable hightlighting for context sentences
+                if '<L>' in token :
+                    token_list.append({"text": token, "id":idx, "disabled":True, "ws":True})
+                elif '<L>' not in token and '<R>' not in token:                        
+                    token_list.append({"text": token, "id":idx, "disabled":False, "ws":True})
+                elif '<R>' in token :
+                    token_list.append({"text": token, "id":idx, "disabled":True, "ws":True})
+
+            eg["sentence"] = sentence
+            eg["tagged_context"] = text
+            eg["text"] = text.replace("<L>", "").replace("<R>", "")
+            eg["tokens"] = token_list
+
+            yield eg
+                
+    stream = stream_text()   
+    stream = disable_left_right(stream) 
 
     return {
-        "dataset": dataset,   # save annotations in this dataset
+        "dataset": dataset,
         "stream": stream,
-        "before_db": remove_video_before_db,
-        
+        "before_db": remove_video_before_db,        
         "view_id": "blocks",  
         "config": {
-            "labels": ["DELETE", "CORRECT", "DO NOTHING"],
-            "blocks": [                
+            "labels": ["DELETE"],
+            "blocks": [  
                 {"view_id": "audio"},
                 {"view_id": "ner_manual"},
                 {"view_id": "text_input"}, # use the choice interface
             ],
+            "allow_newline_highlight": False,
             "audio_loop": True,
             "audio_autoplay": True,
             "show_audio_minimap": False,
             "show_audio_timeline": False,
             "show_audio_cursor": False,
+            "show_flag": True,
         },
         
     }
-
- 
-
