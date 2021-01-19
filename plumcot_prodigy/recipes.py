@@ -43,15 +43,12 @@ def stream():
     episodes_list = load_episodes(path)
     
     for episode in episodes_list:
-        print("Current Episode :", episode)
-
-        series, _, _ = episode.split('.')        
+            
+        print("\nCurrent Episode :", episode)
+        series, _, _ = episode.split('.')         
         mkv, aligned, sentences = load_files(series, episode, path)
         
-        if mkv == "" and aligned == "":
-            continue
-            
-        else:
+        if mkv != "" and aligned != "" and sentences != "":
 
             # choose first and last sentences based on time length            
             begining_sentences  = {i : i._.end_time-i._.start_time for i in sentences[10:20] if i._.end_time-i._.start_time !=0}
@@ -61,32 +58,38 @@ def stream():
 
             # load its attributes from forced alignment
             speaker = max_beg_sentence._.speaker
-            start_time_b = max_beg_sentence._.start_time - 1.0
-            end_time_b = max_beg_sentence._.end_time + 1.0
+            start_time_b = max_beg_sentence._.start_time
+            end_time_b = max_beg_sentence._.end_time +0.2
 
             # extract corresponding video excerpt
             video_excerpt_b = mkv_to_base64(mkv, start_time_b, end_time_b)
+            #print("extract video", len(video_excerpt_b))
 
             yield {
-                        "video": video_excerpt_b,
-                        "speaker": f"{speaker}",
-                        "text": f"{max_beg_sentence}",
-                        "meta": {"moment": "begining sentence", "start": start_time_b, "end": end_time_b, 
-                                 "episode": episode, "mkv_path": mkv, "aligned":aligned},
-                    }
+                            "video": video_excerpt_b,
+                            "speaker": f"{speaker}",
+                            "text": f"{max_beg_sentence}",
+                            "meta": {"moment": "begining sentence", "start": start_time_b, "end": end_time_b, 
+                                     "episode": episode, "mkv_path": mkv, "aligned":aligned},
+                        }
             # load its attributes from forced alignment
             speaker = max_end_sentence._.speaker
-            start_time = max_end_sentence._.start_time - 1.0
-            end_time = max_end_sentence._.end_time + 1.0
+            start_time = max_end_sentence._.start_time - 0.2
+            end_time = max_end_sentence._.end_time
             # extract corresponding video excerpt
             video_excerpt_e = mkv_to_base64(mkv, start_time, end_time)
             yield {
-                        "video": video_excerpt_e,
-                        "speaker": f"{speaker}",
-                        "text": f"{max_end_sentence}",
-                        "meta": {"moment": "ending sentence", "start": start_time, "end": end_time, 
-                                 "episode": episode, "mkv_path": mkv, "aligned":aligned},
-                    }
+                            "video": video_excerpt_e,
+                            "speaker": f"{speaker}",
+                            "text": f"{max_end_sentence}",
+                            "meta": {"moment": "ending sentence", "start": start_time, "end": end_time, 
+                                     "episode": episode, "mkv_path": mkv, "aligned":aligned},
+                        }
+            
+        else:# mkv == "" or aligned == "" or sentences == "":
+            
+            continue
+            
 
 def stream_char():
     # path to shows directories
@@ -95,7 +98,7 @@ def stream_char():
     episodes_list = load_episodes(path)
     
     for episode in episodes_list:
-        print("Current episode", episode)
+        print("\nCurrent episode", episode)
         
         series, _, _ = episode.split('.')        
         mkv, aligned, sentences = load_files(series, episode, path)
@@ -124,19 +127,78 @@ def stream_char():
 
             # load pictures and characters without one of the current episode
             pictures = load_photo(episode_characters, series, path)
+            
+            if len(episode_characters) != len(pictures):
+                print("ONE OR MORE CHARACTERS W// PICTURE")
+                print(len(pictures))
+                print(len(episode_characters))
 
             # options to load in the choice box
             options = []
             for name, val in pictures.items():
+                # display photo in options
                 if name != val:
                     options.append({"id":name, "image":file_to_b64(val)})
                 elif name == val :                    
                     # display character's name when no picture
                     options.append({"id":name, "text": name})
+            # selection for all@ and #unknown#
+            options.append({"id":"all@","text": "all@"})
+            options.append({"id":f"#unknown#{episode}","text":f"#unknown#{episode}"})
 
-            # select sentences with non available characters
-            sentences_choice = [sentence for sentence in sentences if sentence._.speaker == "not_available" if str(sentence) != '']
-            for sentence in sentences_choice:              
+            # 1. select one sentence per speaker's name which is not in the credits
+            sentences_choice_unkown = {sentence._.speaker : sentence for sentence in sentences if sentence._.speaker not in episode_characters if str(sentence) != ''}
+            print(sentences_choice_unkown)
+            print('\nCharacters')
+            for idx, char in enumerate(episode_characters):
+                print(idx, char)
+            
+            # display video excerpt
+            for speaker, sentence in sentences_choice_unkown.items():
+                if speaker != "not_available":                    
+                    try :
+                        if sentences.index(sentence) != 0:
+                            left = sentences[sentences.index(sentence)-1]
+                            right = sentences[sentences.index(sentence)+1]
+                        # beug : left index = last sentence index in the list when current sentence is 0
+                        else:
+                            left = " "
+                            right = sentences[sentences.index(sentence)+1]
+
+                    except IndexError:
+                        left = " "
+                        right = " "  
+
+                    # video
+                    if str(left) != " " and str(right) != " ":
+                        start_time = left._.start_time
+                        end_time= right._.end_time+0.01
+                    else:
+                        start_time = sentence._.start_time
+                        end_time = sentence._.end_time+0.01                
+
+                    speaker = sentence._.speaker
+                    print(speaker, ':', sentence)
+
+                    # extract corresponding video excerpt
+                    video_excerpt = mkv_to_base64(mkv, start_time, end_time)
+
+                    yield {
+                                        "video": video_excerpt,
+                                       "speaker": f"{speaker}",
+                                        "text": f"{speaker} : {sentence}",
+                                    "pictures" : pictures,
+                                    "options" : options,
+                                    "sentence": f"{sentence}",
+                                    "start_time": f"{sentence._.start_time}",
+                                    "end_time": f"{sentence._.end_time}",
+                                   "meta": {"start_extract": start_time, "end_extract": end_time, 
+                                            "episode": episode, "mkv_path": mkv},
+                               }      
+            
+            # 2. select sentences with non available characters
+            sentences_choice_not_available = [sentence for sentence in sentences if sentence._.speaker == 'not_available' if str(sentence) != '']
+            for sentence in sentences_choice_not_available:              
                 
                 try :
                     if sentences.index(sentence) != 0:
@@ -185,7 +247,7 @@ def stream_text():
     episodes_list = load_episodes(path)
     
     for episode in episodes_list:
-        print("Current Episode :", episode)
+        print("\nCurrent Episode :", episode)
 
         series, _, _ = episode.split('.')        
         mkv, aligned, sentences = load_files(series, episode, path)
@@ -199,14 +261,14 @@ def stream_text():
             sorted_confidence_per_sentence = {k: v for k, v in sorted(confidence_per_sentence.items(), key=lambda item: item[1])} 
 
             # select sentences with a confidence lower than x
-            sentences_choice = [sentence[0] for sentence, confidence in sorted_confidence_per_sentence.items() if confidence < 0.3]
+            sentences_choice = [sentence[0] for sentence, confidence in sorted_confidence_per_sentence.items() if  confidence <= 0.5 ]
 
-            ponct = "\'\"-.,!?<>"
+            ponct = "\'\"-.,!?<>/"
 
             for sentence in sentences_choice :
 
-                if str(sentence) not in ponct:
-
+                if str(sentence) not in ponct and sentence._.end_time-sentence._.start_time != 0.0:
+                    
                     # context of the sentences, if exists
                     try :
                         if sentences.index(sentence) != 0:
@@ -224,10 +286,12 @@ def stream_text():
                     # video
                     if str(left) != " " and str(right) != " ":
                         start_time = left._.start_time
-                        end_time= right._.end_time
+                        end_time= right._.end_time+0.01
+                        #print(sentence._.end_time-sentence._.start_time)
                     else:
                         start_time = sentence._.start_time
-                        end_time = sentence._.end_time
+                        end_time = sentence._.end_time+0.01
+                        #print('here',sentence._.end_time-sentence._.start_time)
 
                     speaker = sentence._.speaker
                     confidence = sentence._.confidence
@@ -285,8 +349,7 @@ def select_char(dataset):
         "view_id": "blocks",  
         "config": {
             "blocks": [                
-                {"view_id": "audio"},
-               
+                {"view_id": "audio"},               
                 {"view_id": "choice"}, # use the choice interface
             ],
             "audio_loop": True,
@@ -294,6 +357,7 @@ def select_char(dataset):
             "show_audio_minimap": False,
             "show_audio_timeline": False,
             "show_audio_cursor": False,
+            "choice_style":"multiple",
         },
         
     }
