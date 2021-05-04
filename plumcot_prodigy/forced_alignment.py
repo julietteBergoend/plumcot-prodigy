@@ -25,6 +25,7 @@ class ForcedAlignment:
     ...     end_time = token._.end_time
     ...     confidence = token._.confidence
     ...     word = token.text
+    ...     entity_linking = token.entity_linking
     """
 
     @staticmethod
@@ -71,13 +72,19 @@ class ForcedAlignment:
     def span_average_confidence(span: Span) -> Text:
         """Compute sentence average confidence"""
         return sum(token._.confidence for token in span) / len(span)
+    
+    @staticmethod
+    def span_entity_linking(span: Span) -> Text:
+        """Compute entity linking"""
+        for token in span:
+            return token._.entity_linking
 
     def __init__(self):
 
         # register Token attributes if they are not registered already
         from spacy.tokens import Token
 
-        for attr_name in ["speaker", "start_time", "end_time", "confidence"]:
+        for attr_name in ["speaker", "start_time", "end_time", "confidence", "entity_linking"]:
             if not Token.has_extension(attr_name):
                 Token.set_extension(attr_name, default=None)
 
@@ -96,6 +103,9 @@ class ForcedAlignment:
         if not Span.has_extension("confidence"):
             Span.set_extension("confidence", getter=self.span_average_confidence)
 
+        if not Span.has_extension("entity_linking"):
+            Span.set_extension("entity_linking", getter=self.span_entity_linking)
+            
         # minimalist spaCy pipeline (used only for its tokenizer)
         self.tokenizer = spacy.load(
             "en_core_web_sm", disable=["tagger", "parser", "ner"]
@@ -115,7 +125,7 @@ class ForcedAlignment:
         with open(trs, "r") as fp:
             lines = fp.readlines()
 
-        # for each word, load its attributes (speaker, start_time, end_time, confidence)
+        # for each word, load its attributes (speaker, start_time, end_time, confidence, entity_linking)
         source_tokens, source_attrs = [], []
         for line in lines:
             (
@@ -125,7 +135,8 @@ class ForcedAlignment:
                 end_time,
                 word,
                 confidence,
-            ) = line.strip().split()
+                entity_linking,
+            ) = line.strip().split(' ')
             source_tokens.append(word)
             source_attrs.append(
                 {
@@ -133,6 +144,8 @@ class ForcedAlignment:
                     "start_time": float(start_time),
                     "end_time": float(end_time),
                     "confidence": float(confidence),
+                    "entity_linking": entity_linking,
+
                 }
             )
 
@@ -176,12 +189,14 @@ class ForcedAlignment:
             start_time = min(source_attrs[s]["start_time"] for s in aligned_s)
             end_time = max(source_attrs[s]["end_time"] for s in aligned_s)
             confidence = min(source_attrs[s]["confidence"] for s in aligned_s)
+            entity_linking = [source_attrs[s]["entity_linking"] for s in aligned_s].pop()
             target_attrs.append(
                 {
                     "speaker": speaker,
                     "start_time": start_time,
                     "end_time": end_time,
                     "confidence": confidence,
+                    "entity_linking":entity_linking,
                 }
             )
 
