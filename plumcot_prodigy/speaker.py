@@ -251,9 +251,13 @@ class SpeakerStream:
                 # episode name
                 episode = metas["episode"]
                 serie = episode.split('.')[0]
+                
+                # path to Plumcot data
+                path = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
+                
                 # images for choice view
-                im_path = f"/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data/{serie}/images"
-                path = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
+                im_path = f"{path}/{serie}/images"
+                
                 credits = load_credits(episode, serie, path)
                 # load pictures and characters without one of the current episode
                 pictures = load_photo(credits, serie, path)

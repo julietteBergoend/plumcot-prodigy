@@ -15,8 +15,6 @@ from pathlib import Path
     Start prodigy : prodigy addressee addressee_data <episode_name -F plumcot_prodigy/adressee.py       
 
 """
-
-
 # path to Plumcot data
 DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
 

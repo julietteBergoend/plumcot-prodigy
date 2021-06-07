@@ -8,8 +8,18 @@ from typing_extensions import Literal
 import spacy
 from pathlib import Path
 
-# path to shows directories
-PATH = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
+""" Annotate entity linking (3rd person & names)
+        
+        Displays sentences with tokens to annotate
+        If the token is an entity linking, write the name of the corresponding character in the text input of Prodigy
+        
+        Arguments : ep : episode to annotate (e.g TheWalkingDead.Season01.Episode01),
+            
+    Start prodigy : prodigy entity_linking entity_data <episode_name> -F plumcot_prodigy/entity.py     
+
+"""
+# path to Plumcot data
+DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
 
 def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     """Remove (heavy) "video" and "pictures" key from examples before saving to Prodigy database
@@ -30,11 +40,14 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
 
     return examples
 
-def entity_linking():
+def entity_linking(ep):
+    
+    show = ep.split('.')[0]
+    season = ep.split('.')[1]
+    ep = ep.split('.')[2]
     
     # load episode
-    episodes_list = load_episodes(PATH)
-    #episodes_list = ["BuffyTheVampireSlayer.Season01.Episode12"]
+    episodes_list = load_episodes(DATA_PLUMCOT, show, season, ep)
     
     for episode in episodes_list:
         print("\nCurrent Episode :", episode)
@@ -46,13 +59,9 @@ def entity_linking():
             series, _ = episode.split('.')
             
         # load mkv, aligned file & aligned sentences
-        mkv, aligned, sentences = load_files(series, episode, PATH)
+        mkv, aligned, sentences = load_files(series, episode, DATA_PLUMCOT)
 
-        #######sentences = ["In the name of The King Robert Baratheon", "My name is Juliet\n", "The cat is eating", "My cat is my best friend, he is kind\n", "The frog is eating", "Her name is Kristie\n", "The wolf is eating"]
-
-        #######name_dict = {"juliet": ["juliet_berg"], "robert":["robert_baratheon"], 
-                     #"baratheon" : ["robert_baratheon", "joffrey_baratheon"], "kristie": ["kristie"]}
-
+        # criteria : nouns or pronouns to display automaticaly
         pronouns = ["he", "she", "his", "her", "himself", "herself", "him"]
         nouns = ["mother", "son", "daughter", "wife", "husband", "father", "uncle", "cousin", "aunt", "brother", "sister"]
 
@@ -69,7 +78,6 @@ def entity_linking():
             store_position = []
 
             for token in sentence:
-                #print(token, token.pos_)
                 # check if it is a PRON or DET
                 if str(token).lower() in pronouns :
                         
@@ -146,10 +154,10 @@ def entity_linking():
                 with open(f"/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data/{series}/characters.txt", "r") as f:
                     speakers = [line.split(",")[0] for line in f.readlines()]
                     
-                # get video
+                # get video (add context)
                 try :
-                    if i not in range(0,1):
-                        start_left = sentences[i-1]
+                    if i not in range(0,2):
+                        start_left = sentences[i-2]
                         end_left = sentences[i]
                         # beug : left index = last sentence index in the list when current sentence is 0
                     else:
@@ -168,13 +176,12 @@ def entity_linking():
                     start_time = j[1]._.start_time
                     end_time = j[1]._.end_time +0.1 
 
-                # extract corresponding video excerpt
+                # corresponding video excerpt
                 video_excerpt = mkv_to_base64(mkv, start_time, end_time+0.01)
 
                 to_return["field_id"] = "entity",
                 to_return["field_placeholder"] = "firstname_lastname",
                 to_return["field_rows"] =  1,
-                #to_return["field_autofocus"] = False,
                 to_return["field_suggestions"] = speakers
                 to_return["sentence"] = str(j[1])
                 to_return["start_time"] = j[1]._.start_time
@@ -184,13 +191,16 @@ def entity_linking():
                 yield to_return
     
 
-@prodigy.recipe("entity_linking")
-def addresse(dataset):
+@prodigy.recipe("entity_linking",
+               dataset=("The dataset to save to", "positional", None, str),
+               episode=("Episode to annotate (e.g : TheWalkingDead.Season01.Episode01", "positional", None, str),
+               )
+def addresse(dataset: Text, episode: Text) -> Dict:
     
     blocks = [
         {"view_id": "audio"}, {"view_id": "relations"},{"view_id": "text_input"},
     ]
-    stream = entity_linking()
+    stream = entity_linking(episode)
     
     return {
         "dataset": dataset,

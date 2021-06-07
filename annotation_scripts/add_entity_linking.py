@@ -5,7 +5,7 @@
 add_entity_linking.py <episode>
 """
 
-### Adding Entity Linking annotations after addressee annotations
+### Adding Entity Linking annotations after addressee annotations (1st & 2nd persons & names)
 
     # Use addresses annotations to add entity linking for 2nd pronouns : you, your, yours, yourself...
     # Use speaker of the current sentence to annotate 1st pronouns : my, me myself, mine, I...
@@ -16,9 +16,7 @@ from docopt import docopt
 from pathlib import Path
 
 # path to Plumcot data
-#DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "test_data"
-
+DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
 
 if __name__ == '__main__':
     
