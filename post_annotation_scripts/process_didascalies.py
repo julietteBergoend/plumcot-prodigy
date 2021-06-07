@@ -19,12 +19,11 @@ DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
 # path to Plumcot data
 DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
 
-# ### Json File
-
 if __name__ == '__main__':
     
     args = docopt(__doc__)
     
+    # episode name & json file
     episode_to_process = args["<episode>"]
     database_name = args["<data_base_name>"]
     

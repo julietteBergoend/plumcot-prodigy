@@ -43,10 +43,10 @@ def stream(show_name, season):
         Displays begining and ending excerpts of each episode in the shows
     """
     # path to Plumcot
-    path = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
+    DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
     
     # load episodes list
-    episodes_list = load_episodes(path, show_name, season, None)
+    episodes_list = load_episodes(DATA_PLUMCOT, show_name, season, None)
     
     for episode in episodes_list:
             
@@ -60,7 +60,7 @@ def stream(show_name, season):
             
             
         # load mkv file and aligned sentences    
-        mkv, aligned, sentences = load_files(series, episode, path)
+        mkv, aligned, sentences = load_files(series, episode, DATA_PLUMCOT)
         
         if mkv != "" and aligned != "" and sentences != "":
 

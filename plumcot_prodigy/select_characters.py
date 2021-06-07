@@ -6,6 +6,7 @@ from plumcot_prodigy.custom_loaders import *
 from prodigy.components.preprocess import add_tokens, fetch_media
 from prodigy.util import file_to_b64
 from typing import Dict, List, Text
+from pathlib import Path
 
 import random
 import os
@@ -33,20 +34,27 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
 
     return examples
 
-def stream_char():
-        """ Annotate not_available characters
-            Displays lines with "not_available" character in aligned file
-            Display pictures of all the characters of the current episode
+def stream_char(ep):
+    """ 
+        Annotate not_available characters
+        Displays lines with "not_available" character in aligned file
+        Display pictures of all the characters of the current episode
+        
+        Arguments : ep : episode to annotate (e.g TheWalkingDead.Season01.Episode01),
             
-    Start prodigy : prodigy select_char select_characters -F plumcot_prodigy/recipes.py        
+    Start prodigy : prodigy select_char select_characters <episode_name> -F plumcot_prodigy/recipes.py        
     """
     
     # path to shows directories
-    path = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
+    DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
+    
+    show = ep.split('.')[0]
+    season = ep.split('.')[1]
+    ep = ep.split('.')[2]
     
     # load episodes list
-    episodes_list = load_episodes(path)
-    
+    episodes_list = load_episodes(DATA_PLUMCOT, show, season, ep)
+    print(episodes_list)
     for episode in episodes_list:
         print("\nCurrent episode", episode)
         
@@ -55,8 +63,10 @@ def stream_char():
             series, _, _ = episode.split('.')
         elif len(episode.split('.')) == 2:
             series, _ = episode.split('.')        
+            
+        # load mkv & aligned sentences
+        mkv, aligned, sentences = load_files(series, episode, DATA_PLUMCOT)
         
-        mkv, aligned, sentences = load_files(series, episode, path)
         
         if mkv == "" and aligned == "":
             continue
@@ -64,14 +74,14 @@ def stream_char():
         else:            
 
             # credits for the current episode
-            episode_characters = load_credits(episode, series, path)
+            episode_characters = load_credits(episode, series, DATA_PLUMCOT)
             
             print("\nCHARACTERS\n")
             for idx, char in enumerate(episode_characters):
                 print(idx+1, char)  
 
             # load pictures for the characters of the current episode
-            pictures = load_photo(episode_characters, series, path)
+            pictures = load_photo(episode_characters, series, DATA_PLUMCOT)
             
             # options to load in the choice box
             options = []
@@ -86,16 +96,10 @@ def stream_char():
             options.append({"id":"all@","text": "all@"})
             options.append({"id":f"#unknown#{episode}","text":f"#unknown#{episode}"})
 
-            #### 2. select sentences with non available characters ####
-            
             # find all sentences with non available character
             sentences_choice_not_available = [(sentence, idx) for idx, sentence in enumerate(sentences) if sentence._.speaker == 'not_available' if str(sentence) != '']
-            
-            # take only 20% of the episode
-            #random.shuffle(sentences_choice_not_available)
-            #sentences_choice_not_available = sentences_choice_not_available[int(len(sentences_choice_not_available) * .00) : int(len(sentences_choice_not_available) * .20)]
+
             print("Sentences to annotate :", len(sentences_choice_not_available))
-            count = 0
             
             for el in sentences_choice_not_available:              
                 
@@ -146,11 +150,11 @@ def stream_char():
 @prodigy.recipe(
     "select_char",
     dataset=("The dataset to save to", "positional", None, str),
-    #file_path=("Path to texts", "positional", None, str),
+    episode=("Episode to annotate (e.g : TheWalkingDead.Season01.Episode01", "positional", None, str),
 )
-def select_char(dataset):
+def select_char(dataset: Text, episode: Text) -> Dict:
         
-    stream = stream_char() 
+    stream = stream_char(episode) 
     
     return {
         "dataset": dataset,   # save annotations in this dataset
@@ -162,10 +166,8 @@ def select_char(dataset):
                 "cardMaxWidth": 1500,
                 "cardMinWidth": 1500,                
                             },
-            #"global_css": " .c0181 {max-width : 100px;} .0156 { font-size: 15px !important; }",                       
             "blocks": [                
                 {"view_id": "audio"},
-                #{"view_id": "text"},
                 {"view_id": "choice"}, # use the choice interface
             ],
             "audio_loop": True,
