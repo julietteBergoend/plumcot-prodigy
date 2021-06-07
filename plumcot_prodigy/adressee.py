@@ -4,6 +4,7 @@ from plumcot_prodigy.custom_loaders import *
 import requests
 from plumcot_prodigy.video import mkv_to_base64
 from typing import Dict, List, Text
+from pathlib import Path
 
 # path to shows directories
 PATH = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
@@ -163,7 +164,7 @@ def speech_turns():
                         #print("\n",idx_sent)
                     else:
                         print("DONE")
-                
+
                 # text data to return to Prodigy
                 to_return = {'text': ''}
 
@@ -270,7 +271,7 @@ def speech_turns():
                                 r["head"] = e["id"]
                                 r["label"] = "ADDRESSED_TO"
                         rel_list.append(r)
-                #print(rel_list)
+                        
                 # start and end times
                 if len(s) == 5 :
                     start_time = s[0]["meta"]["aligned"]._.start_time

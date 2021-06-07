@@ -7,27 +7,28 @@ def load_files(series, episode, path):
        Return mkv path, aligned path and sentences of the current episode
     """
     forced_alignment = ForcedAlignment()
-    
+
     # path to mkv
     if os.path.isfile(f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv") : 
         mkv = f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv"
     elif os.path.isfile(f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv") :
         mkv = f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv"
     else:
-        mkv = ""
         print("No mkv file for", episode)
-        
-    # path to forced alignment        
+        mkv = ""
+
+    # path to forced alignment
     if os.path.isfile(os.path.join(path,f"{series}/forced-alignment/{episode}.aligned")):
         aligned = os.path.join(path,f"{series}/forced-alignment/{episode}.aligned")
-        transcript = forced_alignment(aligned)      
-        sentences = list(transcript.sents)
     else:
-        aligned = ""
-        sentences = ""
         print("No aligned file for", episode)
+        aligned = ""
 
-    return mkv, aligned, sentences  
+    # load forced alignment        
+    transcript = forced_alignment(aligned)      
+    sentences = list(transcript.sents)
+
+    return mkv, aligned, sentences
     
 def load_episodes(path, show, season, ep): 
     """Load shows' episodes
@@ -72,15 +73,13 @@ def load_episodes(path, show, season, ep):
         print("Number of episodes to annotate :", len(episodes_list))
         return episodes_list
 
-
-    
-    
 def load_credits(episode, series, path):
-    with open(os.path.join(path, f"{series}/credits.txt")) as f_c:
+    
+    with open(f"{path}/{series}/credits.txt") as f_c:
         credits = f_c.read()
 
     # path to characters
-    with open(os.path.join(path,f"{series}/characters.txt")) as f_ch:
+    with open(f"{path}/{series}/characters.txt") as f_ch:
           characters = f_ch.read()                  
     characters_list = [char.split(',')[0] for char in characters.split('\n') if char != '']
 
@@ -99,37 +98,31 @@ def load_photo(characters, serie_uri, path):
     """Load photos for the show's characters
     """
     directory = "/vol/work1/bergoend/pyannote-db-plumcot"
-    
+
     # open json file corresponding to the current show
     with open(os.path.join(path, f"{serie_uri}/images/images.json")) as f:
         data = json.load(f)
-        
+
     # dictionary character : url to the character's picture
     char_pictures = {}
     # dictionaries for characters
     characters_dic = data['characters']
-    
+
     # find centroid for each character in the current episode
     for character in characters : 
-        #print(character)
         for name, val in characters_dic.items():
-            
+
             # characters with a centroid
             if character == name and val['count'] != 0:
                 try:
                     if val['centroid'] :
-                        char_pictures[name] = val['centroid']
-                        #print('centroid ',character)
-                        
+                        char_pictures[name] = val['centroid'] 
+
                 # characters without centroid
                 except KeyError:
                     char_pictures[name] = os.path.join(directory, val['paths'][0])
-                    #print('photo ',character)
-                    
+
             # characters without photo
             elif character == name and val['count'] == 0:
                 char_pictures[name] = name
-                #print('name ',character)
-                
-               
     return char_pictures 

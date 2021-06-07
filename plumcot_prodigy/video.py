@@ -4,7 +4,6 @@ import base64
 from typing import Dict, Text
 from pathlib import Path
 
-
 def mkv_to_base64(mkv: Path, start_time: float, end_time: float) -> Text:
     """Extract video excerpt for use with prodigy
 
