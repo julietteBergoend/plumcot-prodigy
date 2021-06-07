@@ -14,7 +14,7 @@ import spacy
 import ast
     
 def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
-    """Remove (heavy) "video" key from examples before saving to Prodigy database
+    """Remove (heavy) "video" and "pictures" key from examples before saving to Prodigy database
     Parameters
     ----------
     examples : list of dict
@@ -22,7 +22,7 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     Returns
     -------
     examples : list of dict
-        Examples with 'video' key removed.
+        Examples with 'video' or 'pictures' key removed.
     """
     for eg in examples:
         if "video" in eg:
@@ -36,16 +36,29 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
 
 
 def stream():
+    """Displays one excerpt from the begining of the current episode, and one from the end.  The aim is to check if the text in the begining and the end of the episode corresponds with the video.
+    
+    Start prodigy : prodigy check_forced_alignment data_alignment -F plumcot_prodigy/recipes.py
+
+        Displays begining and ending excerpts
+    """
 
     # path to shows directories
     path = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
     
+    # load episodes list
     episodes_list = load_episodes(path)
     
     for episode in episodes_list:
             
         print("\nCurrent Episode :", episode)
-        series, _, _ = episode.split('.')         
+        
+        # process serie or film
+        if len(episode.split('.')) == 3:
+            series, _, _ = episode.split('.')
+        elif len(episode.split('.')) == 2:
+            series, _ = episode.split('.')
+            
         mkv, aligned, sentences = load_files(series, episode, path)
         
         if mkv != "" and aligned != "" and sentences != "":
@@ -55,7 +68,8 @@ def stream():
             ending_sentences = {i : i._.end_time-i._.start_time for i in sentences[-30:] if i._.end_time-i._.start_time !=0}
             max_beg_sentence = max(begining_sentences, key=begining_sentences.get)
             max_end_sentence = max(ending_sentences, key=ending_sentences.get)
-
+            print(max_beg_sentence, '\n', max_end_sentence)
+            
             # load its attributes from forced alignment
             speaker = max_beg_sentence._.speaker
             start_time_b = max_beg_sentence._.start_time
@@ -63,8 +77,8 @@ def stream():
 
             # extract corresponding video excerpt
             video_excerpt_b = mkv_to_base64(mkv, start_time_b, end_time_b)
-            #print("extract video", len(video_excerpt_b))
 
+            # yield the begining excerpt
             yield {
                             "video": video_excerpt_b,
                             "speaker": f"{speaker}",
@@ -78,6 +92,8 @@ def stream():
             end_time = max_end_sentence._.end_time
             # extract corresponding video excerpt
             video_excerpt_e = mkv_to_base64(mkv, start_time, end_time)
+            
+            # yield the ending excerpt
             yield {
                             "video": video_excerpt_e,
                             "speaker": f"{speaker}",
@@ -92,47 +108,49 @@ def stream():
             
 
 def stream_char():
+    """ 1. Normalize names
+            Displays lines with unknown character (not in credits.txt)
+            Display pictures of all the characters of the current episode    
+    OR    
+        2. Annotate not_available characters
+            Displays lines with "not_available" character
+            Display pictures of all the characters of the current episode
+            
+    Start prodigy : prodigy select_char select_characters -F plumcot_prodigy/recipes.py        
+    """
+    
     # path to shows directories
     path = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
     
+    # load episodes list
     episodes_list = load_episodes(path)
     
     for episode in episodes_list:
         print("\nCurrent episode", episode)
         
-        series, _, _ = episode.split('.')        
+        # process serie or film
+        if len(episode.split('.')) == 3:
+            series, _, _ = episode.split('.')
+        elif len(episode.split('.')) == 2:
+            series, _ = episode.split('.')        
+        
         mkv, aligned, sentences = load_files(series, episode, path)
         
         if mkv == "" and aligned == "":
             continue
             
-        else:
-            # path to credits
-            with open(os.path.join(path, f"{series}/credits.txt")) as f_c:
-                credits = f_c.read()
-
-            # path to characters
-            with open(os.path.join(path,f"{series}/characters.txt")) as f_ch:
-                characters = f_ch.read()                  
-            characters_list = [char.split(',')[0] for char in characters.split('\n') if char != '']
-
-            # credits per episodes
-            credits_dict = {episode.split(',')[0] : episode.split(',')[1:] for episode in credits.split('\n')}
-            final_dict = {}
-            for ep, credit in credits_dict.items():
-                final_dict[ep] = [ch for ch, cr in zip(characters_list, credit) if cr == "1"]   
+        else:            
 
             # credits for the current episode
-            episode_characters = final_dict[episode]
+            episode_characters = load_credits(episode, series, path)
+            
+            print("\nCHARACTERS\n")
+            for idx, char in enumerate(episode_characters):
+                print(idx+1, char)  
 
-            # load pictures and characters without one of the current episode
+            # load pictures for the characters of the current episode
             pictures = load_photo(episode_characters, series, path)
             
-            if len(episode_characters) != len(pictures):
-                print("ONE OR MORE CHARACTERS W// PICTURE")
-                print(len(pictures))
-                print(len(episode_characters))
-
             # options to load in the choice box
             options = []
             for name, val in pictures.items():
@@ -146,15 +164,13 @@ def stream_char():
             options.append({"id":"all@","text": "all@"})
             options.append({"id":f"#unknown#{episode}","text":f"#unknown#{episode}"})
 
-            # 1. select one sentence per speaker's name which is not in the credits
+            #### 1. Normalize : select one sentence per speaker's name which is not in the credits ####
+            """
+            # choose one sentence per unknown character
             sentences_choice_unkown = {sentence._.speaker : sentence for sentence in sentences if sentence._.speaker not in episode_characters if str(sentence) != ''}
-            print(sentences_choice_unkown)
-            print('\nCharacters')
-            for idx, char in enumerate(episode_characters):
-                print(idx, char)
-            
             # display video excerpt
             for speaker, sentence in sentences_choice_unkown.items():
+                # ignore not_available characters
                 if speaker != "not_available":                    
                     try :
                         if sentences.index(sentence) != 0:
@@ -178,7 +194,8 @@ def stream_char():
                         end_time = sentence._.end_time+0.01                
 
                     speaker = sentence._.speaker
-                    print(speaker, ':', sentence)
+                    
+                    print( speaker, ':', sentence)
 
                     # extract corresponding video excerpt
                     video_excerpt = mkv_to_base64(mkv, start_time, end_time)
@@ -195,10 +212,22 @@ def stream_char():
                                    "meta": {"start_extract": start_time, "end_extract": end_time, 
                                             "episode": episode, "mkv_path": mkv},
                                }      
+            """
+            #### 2. select sentences with non available characters ####
             
-            # 2. select sentences with non available characters
-            sentences_choice_not_available = [sentence for sentence in sentences if sentence._.speaker == 'not_available' if str(sentence) != '']
-            for sentence in sentences_choice_not_available:              
+            # find all sentences with non available character
+            sentences_choice_not_available = [(sentence, idx) for idx, sentence in enumerate(sentences) if sentence._.speaker == 'not_available' if str(sentence) != '']
+            
+            # take only 20% of the episode
+            #random.shuffle(sentences_choice_not_available)
+            #sentences_choice_not_available = sentences_choice_not_available[int(len(sentences_choice_not_available) * .00) : int(len(sentences_choice_not_available) * .20)]
+            print("Sentences to annotate :", len(sentences_choice_not_available))
+            count = 0
+            
+            for el in sentences_choice_not_available:              
+                
+                sentence = el[0]
+                sentence_id = el[1]
                 
                 try :
                     if sentences.index(sentence) != 0:
@@ -216,13 +245,14 @@ def stream_char():
                 # video
                 if str(left) != " " and str(right) != " ":
                     start_time = left._.start_time
-                    end_time= right._.end_time
+                    end_time= right._.end_time + 0.1
                 else:
                     start_time = sentence._.start_time
-                    end_time = sentence._.end_time                
+                    end_time = sentence._.end_time +0.1             
                 
                 speaker = sentence._.speaker
-                print(speaker, ':', sentence)
+                count +=1
+                print(count, speaker, ':', sentence)
 
                 # extract corresponding video excerpt
                 video_excerpt = mkv_to_base64(mkv, start_time, end_time)
@@ -235,21 +265,32 @@ def stream_char():
                                     "options" : options,
                                     "start_time": f"{sentence._.start_time}",
                                     "end_time": f"{sentence._.end_time}",
+                                    "sentence_id" : sentence_id,
                                    "meta": {"start_extract": start_time, "end_extract": end_time, 
                                             "episode": episode, "mkv_path": mkv},
                                }      
 
 def stream_text():
+    """Displays didascalies.
+    
+    Start prodigy : prodigy text_classification correction_data -F plumcot_prodigy/recipes.py
+    """
     
     # path to shows directories
     path = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
     
+    # load episodes list
     episodes_list = load_episodes(path)
     
     for episode in episodes_list:
         print("\nCurrent Episode :", episode)
 
-        series, _, _ = episode.split('.')        
+        # process serie or film
+        if len(episode.split('.')) == 3:
+            series, _, _ = episode.split('.')
+        elif len(episode.split('.')) == 2:
+            series, _ = episode.split('.')
+            
         mkv, aligned, sentences = load_files(series, episode, path)
         
         if mkv == "" and aligned == "":
@@ -261,7 +302,7 @@ def stream_text():
             sorted_confidence_per_sentence = {k: v for k, v in sorted(confidence_per_sentence.items(), key=lambda item: item[1])} 
 
             # select sentences with a confidence lower than x
-            sentences_choice = [sentence[0] for sentence, confidence in sorted_confidence_per_sentence.items() if  confidence <= 0.5 ]
+            sentences_choice = [sentence[0] for sentence, confidence in sorted_confidence_per_sentence.items() if  confidence <= 0.3 ]
 
             ponct = "\'\"-.,!?<>/"
 
@@ -285,8 +326,8 @@ def stream_text():
 
                     # video
                     if str(left) != " " and str(right) != " ":
-                        start_time = left._.start_time
-                        end_time= right._.end_time+0.01
+                        start_time = left._.start_time -2.00
+                        end_time= right._.end_time+2.00
                         #print(sentence._.end_time-sentence._.start_time)
                     else:
                         start_time = sentence._.start_time
@@ -308,7 +349,47 @@ def stream_text():
                                         "right": f"{right}",
                                        "meta": {"confidence": confidence, "start": start_time, 
                                                 "end": end_time, "episode": episode, "mkv_path": mkv},
-                                   }      
+                                   }
+                    
+def watch():
+    for episode in [
+        "StarWars.Episode02",
+    ]:
+        #series, _= episode.split('.')
+        
+        mkv = "/vol/work3/lefevre/dvd_extracted/StarWars/StarWars.Episode02.mkv"
+        
+        video_excerpt = mkv_to_base64(mkv, 1492.00, 2033.47)
+        
+        yield {
+                "video": video_excerpt,
+                "meta": {"episode": episode},    
+        
+        }
+        
+        
+@prodigy.recipe(
+    "watch_video",
+    dataset=("Dataset to save annotations to", "positional", None, str),
+)
+def plumcot_video(dataset: Text) -> Dict:
+    return {
+        "dataset": dataset,
+        "stream": watch(),
+        "before_db": remove_video_before_db,
+        "view_id": "blocks",
+        "config": {
+            "blocks": [
+                {"view_id": "audio"},
+               
+            ],
+            "audio_loop": True,
+            "audio_autoplay": True,
+            "show_audio_minimap": False,
+            "show_audio_timeline": False,
+            "show_audio_cursor": False,
+        },
+    }
 
 @prodigy.recipe(
     "check_forced_alignment",
@@ -348,8 +429,14 @@ def select_char(dataset):
         "before_db": remove_video_before_db,
         "view_id": "blocks",  
         "config": {
+            "custom_theme": {
+                "cardMaxWidth": 1500,
+                "cardMinWidth": 1500,                
+                            },
+            #"global_css": " .c0181 {max-width : 100px;} .0156 { font-size: 15px !important; }",                       
             "blocks": [                
-                {"view_id": "audio"},               
+                {"view_id": "audio"},
+                #{"view_id": "text"},
                 {"view_id": "choice"}, # use the choice interface
             ],
             "audio_loop": True,
@@ -358,6 +445,8 @@ def select_char(dataset):
             "show_audio_timeline": False,
             "show_audio_cursor": False,
             "choice_style":"multiple",
+            # css for better alignment of the pictures
+            "global_css": " .c01169 {width:50%;} .c0140 {cursor:pointer; width:60%; height:60%;} .c0156 {width:auto; font-size:15px; word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap;} .c0163 {display: grid; grid-template-columns: repeat(10,auto); grid-gap:1px; padding: 1px;} .c0180 {max-width :100px;} .c0181 {max-width :100px;}",
         },
         
     }
