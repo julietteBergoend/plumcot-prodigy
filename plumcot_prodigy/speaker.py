@@ -309,7 +309,8 @@ class SpeakerStream:
                 "field_rows": 1,
                 "field_autofocus": False,
                 "field_suggestions": sorted(self.speakers),
-                "meta": {"start_extract": chunk.start, "end_extract": chunk.end, "episode": episode, "id_sentence" : speech_turn["id"]},
+                "sentence_id" : speech_turn["id"],
+                "meta": {"start_extract": chunk.start, "end_extract": chunk.end, "episode": episode},
                 "embedding": embedding.tolist(),
             }
 

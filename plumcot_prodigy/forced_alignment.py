@@ -26,6 +26,7 @@ class ForcedAlignment:
     ...     confidence = token._.confidence
     ...     word = token.text
     ...     entity_linking = token.entity_linking
+    ...     addressee = token._.addressee
     """
 
     @staticmethod
@@ -78,13 +79,19 @@ class ForcedAlignment:
         """Compute entity linking"""
         for token in span:
             return token._.entity_linking
+    
+    @staticmethod
+    def span_addressee(span: Span) -> Text:
+        """Compute addressee"""
+        for token in span:
+            return token._.addressee
 
     def __init__(self):
 
         # register Token attributes if they are not registered already
         from spacy.tokens import Token
 
-        for attr_name in ["speaker", "start_time", "end_time", "confidence", "entity_linking"]:
+        for attr_name in ["speaker", "start_time", "end_time", "confidence", "entity_linking", "addressee"]:
             if not Token.has_extension(attr_name):
                 Token.set_extension(attr_name, default=None)
 
@@ -105,6 +112,9 @@ class ForcedAlignment:
 
         if not Span.has_extension("entity_linking"):
             Span.set_extension("entity_linking", getter=self.span_entity_linking)
+        
+        if not Span.has_extension("addressee"):
+            Span.set_extension("addressee", getter=self.span_addressee)
             
         # minimalist spaCy pipeline (used only for its tokenizer)
         self.tokenizer = spacy.load(
@@ -136,6 +146,7 @@ class ForcedAlignment:
                 word,
                 confidence,
                 entity_linking,
+                addressee,
             ) = line.strip().split(' ')
             source_tokens.append(word)
             source_attrs.append(
@@ -145,6 +156,7 @@ class ForcedAlignment:
                     "end_time": float(end_time),
                     "confidence": float(confidence),
                     "entity_linking": entity_linking,
+                    "addressee": addressee,
 
                 }
             )
@@ -190,13 +202,15 @@ class ForcedAlignment:
             end_time = max(source_attrs[s]["end_time"] for s in aligned_s)
             confidence = min(source_attrs[s]["confidence"] for s in aligned_s)
             entity_linking = [source_attrs[s]["entity_linking"] for s in aligned_s].pop()
+            addressee = [source_attrs[s]["addressee"] for s in aligned_s].pop()
             target_attrs.append(
                 {
                     "speaker": speaker,
                     "start_time": start_time,
                     "end_time": end_time,
                     "confidence": confidence,
-                    "entity_linking":entity_linking,
+                    "entity_linking": entity_linking,
+                    "addressee": addressee,
                 }
             )
 

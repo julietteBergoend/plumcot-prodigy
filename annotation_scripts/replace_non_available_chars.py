@@ -13,7 +13,7 @@ from forced_alignment import ForcedAlignment
 import os
 import json
 
-# path to alignment database
+# path to databases
 DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
 
 # path to Plumcot data

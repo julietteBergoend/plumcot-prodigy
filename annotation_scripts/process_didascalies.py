@@ -13,7 +13,7 @@ from docopt import docopt
 from forced_alignment import ForcedAlignment
 from pathlib import Path
 
-# path to alignment database
+# path to databases
 DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
 
 # path to Plumcot data

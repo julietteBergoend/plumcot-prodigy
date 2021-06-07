@@ -6,9 +6,19 @@ from plumcot_prodigy.video import mkv_to_base64
 from typing import Dict, List, Text
 from pathlib import Path
 
-# path to shows directories
-PATH = "/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data"
-#PATH = "/vol/work1/bergoend/scripts/data"
+""" Annotate addressees
+        
+        Displays five speech turns with preselected relations in Prodigy relations_view
+        
+        Arguments : ep : episode to annotate (e.g TheWalkingDead.Season01.Episode01),
+            
+    Start prodigy : prodigy addressee addressee_data <episode_name -F plumcot_prodigy/adressee.py       
+
+"""
+
+
+# path to Plumcot data
+DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
 
 def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     """Remove (heavy) "video" and "pictures" key from examples before saving to Prodigy database
@@ -29,7 +39,7 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
 
 def relations(liste):
     """
-    Create relations list to pre-select relations
+    Create relations list to pre-select relations in relations_view
     """
     locutors = [el[0] for el in liste]
     #print(set(locutors))
@@ -102,14 +112,21 @@ def relations(liste):
     # [(locutor, (sentence with addressee, addressee), ...]    
     return relations_list
 
-def speech_turns():
+def speech_turns(ep):
+    """ 
+        Annotate addresses within 5 speech turns.
+                
+        Arguments : ep : episode to annotate (e.g TheWalkingDead.Season01.Episode01),
+            
+        Start prodigy : prodigy addressee addressee_data <episode_name> -F plumcot_prodigy/adressee.py
+        
+    """
+    show = ep.split('.')[0]
+    season = ep.split('.')[1]
+    ep = ep.split('.')[2]
     
-    # load episode
-    #episodes_list = load_episodes(PATH)
-    episodes_list = ["Lost.Season01.Episode25"]
-    
-    # speakers labels when speaker is not in displayed sentences
-    episode_speakers = []
+    # load episode list
+    episodes_list = load_episodes(DATA_PLUMCOT, show, season, ep)
 
     for episode in episodes_list:
         print("\nCurrent Episode :", episode)
@@ -121,14 +138,14 @@ def speech_turns():
             series, _ = episode.split('.')
          
         # load mkv, aligned file & aligned sentences
-        mkv, aligned, sentences = load_files(series, episode, PATH)
+        mkv, aligned, sentences = load_files(series, episode, DATA_PLUMCOT)
         
         # ignore empty files
         if mkv == "" and aligned == "":
             continue
             
         else:
-            # credits of the episode 
+            # speech turns of the episode 
             speech_turns = list()
 
             # create speaker / sentence groups
@@ -136,11 +153,9 @@ def speech_turns():
                 
                 # keep track of the sentence's id in alignment file
                 speech_turns.append( ( (idx, sentence), (sentence._.speaker, str(sentence)) ) )
-                episode_speakers.append(sentence._.speaker)   
 
-            # process sentences 3 by 3
+            # process sentences 5 by 5, format data for Prodigy relations_view
             for slices in range(0, len(speech_turns), 5):
-                #print("\n", speech_turns[slices:slices+5])
                 
                 # sentence & speaker container for relations
                 s = []
@@ -161,22 +176,21 @@ def speech_turns():
                         fifth = {"sentence": str(speech_turns[slices:slices+5][4][0][1]), "speaker": str(speech_turns[slices:slices+5][4][1][0]), "id": str(speech_turns[slices:slices+5][4][0][0])}
 
                         s.append({"text": speaker_sent[1], "meta": {"speaker": speaker_sent[0], "aligned": idx_sent[1]} })
-                        #print("\n",idx_sent)
+                    
                     else:
                         print("DONE")
 
-                # text data to return to Prodigy
+                # text data to return into Prodigy
                 to_return = {'text': ''}
 
                 # for each speech turn, create an interpretable dictionary for Prodigy
-                # in order to display it in the interface
+                # in order to display it in the interface relations_view
                 for idx, el in enumerate(s) :
                     speaker = el["meta"]["speaker"]
                     sentence = el["text"]
 
                     # full text to return
                     to_return["text"] += f"{speaker} {sentence}\n"
-                    #to_return["text"] += f"{el["meta"]["speaker"]} {el["text"]}\n"
                 
                 # tokens displayed in Prodigy
                 tokens = []
@@ -243,31 +257,26 @@ def speech_turns():
                     # speaker's span
                     spans.append({"start": start, "end": start + len(speaker), "token_start": 12, "token_end": 12, "label": "speaker",})
                     
-                    
                 else:
                     print("DONE")
 
-                # find relations
+                # create relations
                 rel = relations([(el["meta"]["speaker"], el["text"]) for el in s])
                 
                 # pre-selected relations
                 rel_list = []
                 
-                # create preselected relation displayed in Prodigy 
+                # create preselected relations displayed in Prodigy 
                 # relation : {"child": 4, "head": 3, "label": "ADDRESSED_TO"}
                 if rel:
                     for i in rel :
                         r = {}
                         id_char = []
                         for e in tokens:                           
-                            # si l"addressee correspond à un des locuteurs   
                             if i[1][1] in e["text"]:
-                                #print(i[1][1], e["text"], e["id"])
                                 id_char.append(e["id"])
                                 r["child"] = min(id_char)
-                                #relations.append()
                             if i[1][0] == e["text"]:
-                                #print(e["text"])
                                 r["head"] = e["id"]
                                 r["label"] = "ADDRESSED_TO"
                         rel_list.append(r)
@@ -283,7 +292,6 @@ def speech_turns():
                     video_excerpt = mkv_to_base64(mkv, 1.0, 2.0)
                 
                 if len(s) == 5:
-                    print(s,'\n')
                     # append tokens to dictionary
                     to_return["video"] = video_excerpt
                     to_return["tokens"] = tokens 
@@ -292,14 +300,16 @@ def speech_turns():
                     to_return["meta"] = {'first':first, 'second': second , 'third': third, 'fourth': fourth, 'fifth':fifth}
                     to_return["episode"] = episode
                     
-                    #to_return["relations_span_labels"] = episode_characters
-
                     yield to_return
 
 
 
-@prodigy.recipe("addressee")
-def addresse(dataset):
+@prodigy.recipe("addressee",
+               dataset=("The dataset to save to", "positional", None, str),
+               episode=("Episode to annotate (e.g : TheWalkingDead.Season01.Episode01", "positional", None, str),
+               )
+
+def addresse(dataset: Text, episode: Text) -> Dict:
 
     blocks = [
         {"view_id": "audio"},
@@ -307,7 +317,7 @@ def addresse(dataset):
     ]
 
     # call stream
-    stream = speech_turns()    
+    stream = speech_turns(episode)    
     
     # create labels list
     episode = None    
@@ -315,7 +325,7 @@ def addresse(dataset):
         episode = i["episode"]
         break
     series = episode.split('.')[0]
-    labels = load_credits(episode, series, PATH)
+    labels = load_credits(episode, series, DATA_PLUMCOT)
     labels = labels[:45]
     labels = labels + ["multiple_persons"]
     print(labels)

@@ -1,4 +1,4 @@
-from plumcot_prodigy.forced_alignment_3 import ForcedAlignment
+from plumcot_prodigy.forced_alignment import ForcedAlignment
 import os
 import json
 
