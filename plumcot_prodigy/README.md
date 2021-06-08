@@ -33,6 +33,7 @@ If the text corresponds to audio in both examples, the episode is good. If not, 
 
 #### Usage
 1. Make sure that you have created a DB before lauching annotation
+Create a data base before first usage only.
 Recommended name for your database : data_alignment
 ```bash
 (plumcot-prodigy) plumcot-prodigy$ prodigy db-in data_alignment
@@ -43,7 +44,7 @@ Recommended name for your database : data_alignment
 
 e.g : prodigy check_forced_alignment data_alignment Lost Season01 -F plumcot_prodigy/check_alignment.py
 ```
-3. Save you annotations
+3. Save your annotations
 ```bash
 (plumcot-prodigy) plumcot-prodigy$ prodigy db-out data_alignment > <path/to/prodigy_databases/data_base_name.jsonl>
 ```
@@ -53,15 +54,130 @@ e.g : prodigy check_forced_alignment data_alignment Lost Season01 -F plumcot_pro
 
 e.g : ./process_alignment.py Lost alignment_data.jsonl
 ```
+Corresponding script : [process_alignment.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/annotation_scripts/process_alignment.py)
+
 ### Check didascalies
+![check_didascalies](../screenshots/didascalies.png)
+Corresponding script : [check_didascalies.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/check_didascalies.py)
+
+This recipe allows to delete didascalies in transcription files. 
+Prodigy displays all the sentences in the current episode with confidence index under _x_, and allows to select parts of the sentence to delete (if so).
+
+#### Usage
+1. Create a new database
+Recommended name for your database : data_didascalies
+
+2. Lauch the recipe :
+```bash
+(plumcot-prodigy) plumcot-prodigy$ prodigy check_didascalies.py data_didascalies <show_name> <season> <episode> <confidence_index> -F plumcot_prodigy/check_didascalies.py
+
+e.g : prodigy check_didascalies data_didascalies TheWalkingDead Season01 Episode01 0.3 -F plumcot_prodigy/check_didascalies.py
+```
+When selection is finished, press _x_ (or _reject_).
+If no selection is necessary, press _a_ (or _accept_) or _space_ (or _ignore_).
+
+The top example will display sentences with a confidence index bellow 0.3. 
+
+3. Save your annotations
+```bash
+e.g : prodigy db-out data_didascalies > seasons1_didascalies.jsonl
+```
+4. Process your annotations
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./process_didascalies.py <episode> <data_base_name>
+
+e.g : ./process_didascalies.py TheWalkingDead.Season01.Episode01 seasons1_didascalies.jsonl
+```
+Didascalies deletion is applied to trancript files (Plumcot/data/{serie_uri}/transcripts/*.txt), not to aligned files.
+Once the new trancript file is created, you must lauch [Forced Alignment](https://github.com/PaulLerner/Forced-Alignment) to create a new aligned file. 
 
 ### Not_available characters
+This part concerns all shows without available characters.
+```bash
+ER.Season01.Episode01 not_available 6.2 6.5600000000000005 Dr 0.1 ? ?
+ER.Season01.Episode01 not_available 6.56 6.56 . 0.95 ? ?
+ER.Season01.Episode01 not_available 12.76 13.12 Greene 0.1 ? ?
+ER.Season01.Episode01 not_available 13.12 13.12 ? 0.95 ? ?
+```
+Prodigy displays all the sentences in the current episode with not available speaker, and images corresponding to all the characters of the current episodes.
 
+Two scripts are available for this task, including one recipe with active annotation using speaker diarization model.
 #### Before annotation
+The two recipes are using image selection. Images have to be size 40x40 to allow correct display.
 
+Corresponding script : [resize_images](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/annotation_scripts/resize_images.py)
+
+Usage:
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./process_alignment.py <episode_name>
+
+e.g : ./process_alignment.py StarWars.Episode06
+```
 #### Select_character
+![select_characters](../screenshots/select_chars.png)
+Corresponding script : [select_characters.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/select_characters.py)
+This recipe is a version without speaker diarization.
+
+1. Process images
+2. Enter a new database
+3. Lauch recipe
+```bash
+(plumcot-prodigy) plumcot-prodigy$ prodigy select_char select_characters <episode_name> -F plumcot_prodigy/select_characters.py
+
+e.g : prodigy select_char select_characters 24.Season01.Episode01 -F plumcot_prodigy/select_characters.py
+```
+When selection is finished, press _a_ (for _accept_) .
+If no selection is done, press _space_ (for _ignore_) or _x_.
+You can select multiple images when multiple characters are speaking at the same time and uttering the same sentence.
+
+4. Save your annotations
+5. Process your annotations
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./replace_non_available_chars.py <episode> <data_base_name>
+
+e.g : ./replace_non_available_chars.py 24.Season01.Episode01 characters.jsonl
+```
+Speaker annotations are applied directly to the alignment file.
+A temporary file is created with previous alignment.
 
 #### Speakers
+![speakers](../screenshots/speakers.png)
+Corresponding script : [speaker.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/speaker.py)
+
+Active learning annotation with speaker recognition model.
+
+1. Before annotation : format the data to annotate
+  - create speech turn file :	this file gathers all speech turns without speaker in the alignment file.
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./create_speech_turns.py <episode_name>
+```
+  - create speakers file : this file is a list of all the speakers of the current show.
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./create_speakers_txt.py <id_series>
+```
+2. Create a new database
+3. Lauch recipe
+```bash
+(plumcot-prodigy) plumcot-prodigy$ prodigy pyannote.speaker <path/to/speechturns.jsonl> 
+-speakers=<path/to/speakers.txt> -allow-new-speaker -F plumcot_prodigy/speaker.py
+
+e.g : prodigy pyannote.speaker speakers_data speech_turns.jsonl -speakers=speakers.txt -allow-new-speaker -F plumcot_prodigy/speaker.py
+```
+The recipe uses the same principle as select characters : select corresponding locutor thanks to images.
+Multiple selections are _not allowed_.
+
+This recipe stores annotations to make predictions on the current speaker.
+Predictions start after about 20 annotations. 
+
+4. Save your annotations
+5. Process your annotations
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./replace_non_available_chars.py <episode> <data_base_name>
+
+e.g : ./replace_non_available_chars.py 24.Season01.Episode01 speakers_data.jsonl
+```
+Speaker annotations are applied directly to the alignment file.
+A temporary file is created with previous alignment.
 
 ### Addressees
 
