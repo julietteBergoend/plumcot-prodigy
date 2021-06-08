@@ -65,50 +65,52 @@ if __name__ == '__main__':
         meta = el["meta"]
 
         if meta["episode"] == episode and el["answer"] == "accept":
+            print("\n")
 
-            print("Process annotations")
-            # if EL annotation exists, process it
-            if "entity" in el:
-                annotations = []
-                # extract annotation from "spans"
+            annotations = []
+
+            # if input 1 is full
+            if "input_1" in el:
+
+                # take annotation from "spans"
                 for span in el["spans"]:
 
-                    entities = el["entity"].split(",")
+                    if span["label"] == "EL":
+                        # find  entities
+                        token = el["text"][span["start"]: span["end"]+1]
+                        label = span["label"]
+                        annotation = (token, el["input_1"])
+                        annotations.append(annotation)
 
-                    if entities:
+            # if input 2 is full
+            if "input_2" in el:
+
+                # récupérer les annotations dans "spans"
+                for span in el["spans"]:
+
+                    if span["label"] == "EL2":
+                        # find  entities
+                        # find  entities
+                        token = el["text"][span["start"]: span["end"]+1]
+                        label = span["label"]
+                        annotation = (token, el["input_2"])
+                        annotations.append(annotation)
+
+            # if input 3 is full
+            if "input_3" in el:
+
+                # récupérer les annotations dans "spans"
+                for span in el["spans"]:
+
+                    if span["label"] == "EL3":
 
                         # find  entities
                         token = el["text"][span["start"]: span["end"]+1]
                         label = span["label"]
-                        
-                        # find second entity
-                        if token != "":
-                            if len(entities) == 1:                        
-                                annotation = (token, entities[0])
-                                annotations.append(annotation)
+                        annotation = (token, el["input_3"])
+                        annotations.append(annotation)
 
-                            if len(entities) == 2:
-
-                                # if label == EL, annotation corresponds to 
-                                # first character entered in text input
-                                if label == "EL":
-                                    annotation = (token, entities[0])
-                                elif label == "EL2":
-                                    annotation = (token, entities[1])
-                                annotations.append(annotation)
-
-                            if len(entities) == 3:
-
-                                if label == "EL":
-                                    annotation = (token, entities[0])
-                                elif label == "EL2":
-                                    annotation = (token, entities[1])
-                                elif label == "EL3":
-                                    annotation = (token, entities[2])
-                                annotations.append(annotation)
-
-                            # store annotations
-                            container[meta["sentence_id"]] = {"id": int(meta["sentence_id"]), "sentence":el["text"], 
+            container[meta["sentence_id"]] = {"id": int(meta["sentence_id"]), "sentence":el["text"], 
                                                      "entities":annotations, "type":"EL"}
 
     print("Total entity annotations :", len(container))

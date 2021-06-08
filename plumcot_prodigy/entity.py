@@ -198,7 +198,7 @@ def entity_linking(ep):
 def addresse(dataset: Text, episode: Text) -> Dict:
     
     blocks = [
-        {"view_id": "audio"}, {"view_id": "relations"},{"view_id": "text_input"},
+        {"view_id": "audio"}, {"view_id": "relations"},{"view_id": "text_input", "field_id": "input_1"},{"view_id": "text_input", "field_id": "input_2"}, {"view_id": "text_input", "field_id": "input_3"},
     ]
     stream = entity_linking(episode)
     
