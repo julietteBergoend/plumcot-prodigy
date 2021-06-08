@@ -23,7 +23,7 @@ The script will create a temp file with a copy of the previous transcript, and a
 
 ### Check alignment
 
-![check_forced_alignment recipe](screenshots/alignment.jpg)
+![check_forced_alignment recipe](../screenshots/alignment.png)
 
 Corresponding script : [check_alignment.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/check_alignment.py)
 
