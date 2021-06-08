@@ -128,8 +128,6 @@ def stream_char(ep):
                     end_time = sentence._.end_time +0.1             
                 
                 speaker = sentence._.speaker
-                count +=1
-                print(count, speaker, ':', sentence)
 
                 # extract corresponding video excerpt
                 video_excerpt = mkv_to_base64(mkv, start_time, end_time)
