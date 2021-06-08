@@ -54,14 +54,12 @@ e.g : prodigy check_forced_alignment data_alignment Lost Season01 -F plumcot_pro
 
 e.g : ./process_alignment.py Lost alignment_data.jsonl
 ```
-Corresponding script : [process_alignment.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/annotation_scripts/process_alignment.py)
-
 ### Check didascalies
 ![check_didascalies](../screenshots/didascalies.png)
 Corresponding script : [check_didascalies.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/check_didascalies.py)
 
 This recipe allows to delete didascalies in transcription files. 
-Prodigy displays all the sentences in the current episode with confidence index under _x_, and allows to select parts of the sentence to delete (if so).
+Prodigy displays all the sentences in the current episode with confidence index under _x_, and allows to select parts of the sentence to delete (if so). Left and right contexts are displayed but with forbidden selection.
 
 #### Usage
 1. Create a new database
@@ -180,6 +178,40 @@ Speaker annotations are applied directly to the alignment file.
 A temporary file is created with previous alignment.
 
 ### Addressees
+![addressee](../screenshots/addressee_1.png)
+Selecting relations (above)
+![addressee](../screenshots/addressee_2.png)
+Labelling relations (above)
+
+Corresponding script : [addressees.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/adressee.py)
+
+This recipe allows you to annotate addressees for 5 speech turns per example.
+Addressee annotation consists in making relations between sentences and speakers. 
+
+#### Usage
+1. Create a database
+
+2. Lauch recipe
+```bash
+(plumcot-prodigy) plumcot-prodigy$ prodigy addressee addressee_data <episode_name> -F plumcot_prodigy/adressee.py
+```
+The head of the relation is always a speaker whereas the child of the relation is always a sentence (see first illustration).
+
+Sometimes relations can’t be annotated because one speaker is talking during 5 speech turns. In this case, a labelling interface is available to label the sentence with its addressee (see second illustration).
+Labelling can also be used when the addressee is addressed to multiple speakers which are not in the 5 speech turns.
+Combination of labelling and selection is allowed.
+
+Press _a_ when addressee annotation is done for the current example.
+Press _space_ when no annotations are done/needed.
+
+3. Save your annotations
+
+4. Process your annotations
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./process_addressee.py <episode> <data_base_name>
+```
+
+
 
 ### Entity linking
 
