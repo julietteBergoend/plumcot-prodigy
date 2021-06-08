@@ -56,6 +56,7 @@ e.g : ./process_alignment.py Lost alignment_data.jsonl
 ```
 ### Check didascalies
 ![check_didascalies](../screenshots/didascalies.png)
+
 Corresponding script : [check_didascalies.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/check_didascalies.py)
 
 This recipe allows to delete didascalies in transcription files. 
@@ -92,6 +93,7 @@ Once the new trancript file is created, you must lauch [Forced Alignment](https:
 ### Not_available characters
 This part concerns all shows without available characters.
 ```bash
+(aligned file)
 ER.Season01.Episode01 not_available 6.2 6.5600000000000005 Dr 0.1 ? ?
 ER.Season01.Episode01 not_available 6.56 6.56 . 0.95 ? ?
 ER.Season01.Episode01 not_available 12.76 13.12 Greene 0.1 ? ?
@@ -113,6 +115,7 @@ e.g : ./process_alignment.py StarWars.Episode06
 ```
 #### Select_character
 ![select_characters](../screenshots/select_chars.png)
+
 Corresponding script : [select_characters.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/select_characters.py)
 This recipe is a version without speaker diarization.
 
@@ -140,6 +143,7 @@ A temporary file is created with previous alignment.
 
 #### Speakers
 ![speakers](../screenshots/speakers.png)
+
 Corresponding script : [speaker.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/speaker.py)
 
 Active learning annotation with speaker recognition model.
@@ -179,8 +183,11 @@ A temporary file is created with previous alignment.
 
 ### Addressees
 ![addressee](../screenshots/addressee_1.png)
+
 Selecting relations (above)
+
 ![addressee](../screenshots/addressee_2.png)
+
 Labelling relations (above)
 
 Corresponding script : [addressees.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/adressee.py)
@@ -210,19 +217,102 @@ Press _space_ when no annotations are done/needed.
 ```bash
 (plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./process_addressee.py <episode> <data_base_name>
 ```
-
-
+```bash
+(aligned file)
+TheWalkingDead.Season01.Episode02 carl_grimes 8.70 9.06 Mom 0.10 ? lori_grimes
+TheWalkingDead.Season01.Episode02 carl_grimes 9.06 9.06 ! 0.95 ? lori_grimes
+TheWalkingDead.Season01.Episode02 lori_grimes 19.19 19.55 Yes 0.99 ? carl_grimes
+TheWalkingDead.Season01.Episode02 lori_grimes 19.60 20.00 Honey 0.99 ? carl_grimes
+TheWalkingDead.Season01.Episode02 lori_grimes 21.00 22.00 ? 0.99 ? carl_grimes
+```
 
 ### Entity linking
 
+This task assigns entity labels to words such as pronouns : me, you, he, mine, her, we... 
+Excluded pronouns : they, them.
+It also attributes entity labels to names and nicknames :
+```bash
+(aligned file)
+GameOfThrones.Season01.Episode05 renly_baratheon 477.69 478.07 Such 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 478.07 478.16 a 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 478.16 478.51 shame 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 478.51 478.51 , 0.10 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 478.62 479.24 Littlefinger 0.99 petyr_baelish petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 479.24 479.24 . 0.95 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 479.50 479.76 It 0.10 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 479.76 480.02 would 0.10 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 480.02 480.07 have 0.40 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 480.08 480.19 been 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 480.22 480.43 so 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 480.48 480.67 nice 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 480.69 480.76 for 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 480.77 480.82 you 0.99 petyr_baelish petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 480.84 480.92 to 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 480.94 481.02 have 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 481.02 481.09 a 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 481.09 481.36 friend 0.99 _ petyr_baelish
+GameOfThrones.Season01.Episode05 renly_baratheon 481.36 481.36 . 0.95 _ petyr_baelish
+```
+
 #### Entity linking - 1st, 2nd persons & names
 
+This first par of entity linking annotations uses addressees to assign EL to 2nd person pronouns, and current speaker for 1st person pronouns.
+
+The [script](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/annotation_scripts/add_entity_linking.py) also uses knowledge given by the user to assign EL to names and nicknames:
+```bash
+knowledge = {
+
+        # GOT
+        "GameOfThrones" : {"ned" : "eddard_stark", "khaleesi" : "daenerys_targaryen", "dani" : "daenerys_targaryen", "littlefinger": "petyr_baelish", 
+                          "sam" : "samwell_tarly", "tommen" : "tommen_baratheon", 'tywin': 'tywin_lannister', 'petyr': 'petyr_baelish', 
+                          'cersei': 'cersei_lannister', 'jaime': 'jaime_lannister', 'theon': 'theon_greyjoy', 'barristan': 'barristan_selmy',
+                          'jorah': 'jorah_mormont', 'joffrey': 'joffrey_baratheon', 'jeor': 'jeor_mormont', 'varly': 'varly', 'janos': 'janos_slynt',
+                          'renly': 'renly_baratheon', 'robert': 'robert_baratheon', 'eddard': 'eddard_stark', 'waymar': 'waymar_royce', 'gared': 'gared', 
+                          'jon': 'jon_snow', 'sansa': 'sansa_stark', 'sandor': 'sandor_clegane','arya': 'arya_stark', 'tyrion': 'tyrion_lannister', 
+                          'catelyn': 'catelyn_stark', 'robin': 'robin_arryn', 'rodrik': 'rodrik_cassel', 'bronn': 'bronn', 'lancel': 'lancel_lannister',
+                          'lysa': 'lysa_arryn', 'robb': 'robb_stark', 'irri': 'irri','vardis': 'vardis_egen', 'kevan': 'kevan_lannister',                                                     'rickon': 'rickon_stark'},
+...
+```
+Usage:
+1. Make sure that addressee annotation is done
+2. Add names to the knowledge dictionary in the script. Add a new show dictionary if you work on a new show.
+3. Lauch script
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./add_entity_linking.py <episode_name>
+
+e.g ./add_entity_linking.py TheWalkingDead.Season01.Episode02
+```
 #### Entity linking - 3rd person & names
 
-## Notes
+![entity_linking](../screenshots/entity_linking.png)
 
-### video.py
+Corresponding script : [entity.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/entity.py)
 
-### custom_loaders.py
+This second step allows to assign EL to the rest of the nouns and pronouns in the aligned file.
 
-### forced_alignment.py
+Usage:
+1. Create a new database
+2. Lauch recipe
+```bash
+(plumcot-prodigy) plumcot-prodigy$ prodigy entity_linking my_dataset <episode_name> -F plumcot_prodigy/entity.py
+```
+The recipe displays sentences one by one, and pre-selects nouns and pronouns.
+If preselections are not nouns or pronouns, skip the example (_space_).
+If preselections are nouns or pronouns, corresponding to one character, enter his name in the first input. Press _a_.
+If preselections are nouns or pronouns, corresponding to multiple characters, enter their names in separate inputs, and use the labelling tool to assign right labels to right nouns/pronouns (see the illustration). Press _a_.
+
+3. Save your annotations
+4. Process your annotations
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ <episode_name> <database_name>
+
+e.g : ./process_entities.py TheWalkingDead.Season01.Episode02 test.jsonl
+```
+```bash
+(aligned file)
+TheWalkingDead.Season01.Episode02 carl_grimes 8.70 9.06 Mom 0.10 lori_grimes lori_grimes
+TheWalkingDead.Season01.Episode02 carl_grimes 9.06 9.06 ! 0.95 _ lori_grimes
+TheWalkingDead.Season01.Episode02 lori_grimes 19.19 19.55 Yes 0.99 _ carl_grimes
+TheWalkingDead.Season01.Episode02 lori_grimes 19.60 20.00 Honey 0.99 _ carl_grimes
+TheWalkingDead.Season01.Episode02 lori_grimes 21.00 22.00 ? 0.99 _ carl_grimes
+```
