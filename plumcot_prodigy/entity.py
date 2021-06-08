@@ -198,7 +198,7 @@ def entity_linking(ep):
 def addresse(dataset: Text, episode: Text) -> Dict:
     
     blocks = [
-        {"view_id": "audio"}, {"view_id": "relations"},{"view_id": "text_input", "field_id": "input_1"},{"view_id": "text_input", "field_id": "input_2"}, {"view_id": "text_input", "field_id": "input_3"},
+        {"view_id": "audio"}, {"view_id": "relations"},{"view_id": "text_input", "field_id": "input_1", "field_placeholder":"Type here for EL1..."},{"view_id": "text_input", "field_id": "input_2", "field_placeholder":"Type here for EL2..."}, {"view_id": "text_input", "field_id": "input_3", "field_placeholder":"Type here for EL3..."},
     ]
     stream = entity_linking(episode)
     
@@ -216,7 +216,7 @@ def addresse(dataset: Text, episode: Text) -> Dict:
             "show_audio_minimap": False,
             "show_audio_timeline": False,
             "show_audio_cursor": False,
-            "relations_span_labels" : ["EL", "EL2", "EL3"],
+            "relations_span_labels" : ["EL1", "EL2", "EL3"],
             "field_autofocus" : False,            
         },
     }
