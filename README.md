@@ -40,13 +40,13 @@ Once `ngrok` is copied and [running](https://dashboard.ngrok.com/get-started/set
 
 When starting new annotations, you need to follow this process : 
 
-1. Make sure that the show you want to annotate is in the right format :
-2. Check the alignment of the episodes : lien check alignment
-3. Check didascalies in your transcipts :
-4. (if needed) Annotate not_available characters :
-5. Annotate addressees :
-6. Add entity linking (1st & 2nd persons) :
-7. Annotate entity linking (3rd person & names): 
+1. Make sure that the show you want to annotate is in the right format : [adapt alignement file](https://github.com/julietteBergoend/plumcot-prodigy/tree/main/plumcot_prodigy#before-annotation)
+2. Check the alignment of the episodes : [check alignment](https://github.com/julietteBergoend/plumcot-prodigy/tree/main/plumcot_prodigy#check-alignment)
+3. Check didascalies in your transcipts : [check didascalies](https://github.com/julietteBergoend/plumcot-prodigy/tree/main/plumcot_prodigy#check-didascalies)
+4. (if needed) Annotate not_available characters : [not available speakers](https://github.com/julietteBergoend/plumcot-prodigy/tree/main/plumcot_prodigy#not_available-characters)
+5. Annotate addressees : [addressees](https://github.com/julietteBergoend/plumcot-prodigy/tree/main/plumcot_prodigy#addressees)
+6. Add entity linking (1st & 2nd persons) : [entity linking 1](https://github.com/julietteBergoend/plumcot-prodigy/tree/main/plumcot_prodigy#entity-linking---1st-2nd-persons--names)
+7. Annotate entity linking (3rd person & names): [entity linking 2](https://github.com/julietteBergoend/plumcot-prodigy/tree/main/plumcot_prodigy#entity-linking---3rd-person--names)
 
 ## Notes
 
