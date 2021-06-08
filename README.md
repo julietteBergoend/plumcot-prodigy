@@ -36,3 +36,31 @@ Open the app in your browser and start annotating!
 To access the server from anywhere, one can use [`ngrok`](https://ngrok.com/).
 Once `ngrok` is copied and [running](https://dashboard.ngrok.com/get-started/setup) with `./ngrok http 8080`, you can access the web interface in your browser using the printed `http://xxxxx.ngrok.io` URL.
 
+## Starting new annotations for [Plumcot](https://github.com/julietteBergoend/pyannote-db-plumcot) dataset
+
+When starting new annotations, you need to follow this process : 
+
+1. Make sure that the show you want to annotate is in the right format :
+2. Check the alignment of the episodes : lien check alignment
+3. Check didascalies in your transcipts :
+4. (if needed) Annotate not_available characters :
+5. Annotate addressees :
+6. Add entity linking (1st & 2nd persons) :
+7. Annotate entity linking (3rd person & names): 
+
+## Notes
+
+Annotation scripts
+```bash
+(plumcot-prodigy) cd plumcot-prodigy
+```
+
+Pre-process and post-process annotation scripts
+```bash
+(plumcot-prodigy) cd plumcot-prodigy/annotation_scripts
+```
+
+Place to save your annotations
+```bash
+(plumcot-prodigy) cd plumcot-prodigy/prodigy_databases
+```
