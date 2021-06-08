@@ -13,7 +13,13 @@ e.g : TheWalkingDead.Season01.Episode02 carl_grimes 8.70 9.06 Mom 0.10 _ _
 Each line must contain : the episode reference, speaker name, start time of the word, end time of the word, one word, confidence score, entity linking (EL) (represented by “_”, “?”, or “character_name”), addressee (represented by “_”*, “?”*, or “character_name”).
 
 Corresponding script : [adapt_aligned_file.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/annotation_scripts/adapt_aligned_file.py)
-Usage : PATH TO GUIDE
+
+Usage :
+```bash
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./adapt_aligned_file.py <episode_name>
+
+e.g : ./adapt_aligned_file.py 24.Season01.Episode01
+```
 
 The script will create a temp file with a copy of the previous transcript, and a new aligned file with one or two “?” sign(s) at the end of each line (depending on the length of the lines). 
 
@@ -32,7 +38,7 @@ The recipe displays the first and the last sentences of each episode in the seas
 If the text corresponds to audio in both examples, the episode is good. If not, it can be because of a double episode. In the last case, you need to check the transcript of the episode.
 
 #### Usage
-1. Make sure that you have created a DB before lauching annotation
+1. Make sure that you have created a database before lauching annotation.
 Create a data base before first usage only.
 Recommended name for your database : data_alignment
 ```bash
@@ -44,6 +50,9 @@ Recommended name for your database : data_alignment
 
 e.g : prodigy check_forced_alignment data_alignment Lost Season01 -F plumcot_prodigy/check_alignment.py
 ```
+Press _a_ (for _accept_) when the audio corresponds to the text.
+Press _x_ (for _reject_) if not.
+
 3. Save your annotations
 ```bash
 (plumcot-prodigy) plumcot-prodigy$ prodigy db-out data_alignment > <path/to/prodigy_databases/data_base_name.jsonl>
@@ -54,6 +63,7 @@ e.g : prodigy check_forced_alignment data_alignment Lost Season01 -F plumcot_pro
 
 e.g : ./process_alignment.py Lost alignment_data.jsonl
 ```
+The script displays the result of your annotations. Based on it, you may need to check some audio and transcript files.
 ### Check didascalies
 ![check_didascalies](../screenshots/didascalies.png)
 
@@ -63,9 +73,8 @@ This recipe allows to delete didascalies in transcription files.
 Prodigy displays all the sentences in the current episode with confidence index under _x_, and allows to select parts of the sentence to delete (if so). Left and right contexts are displayed but with forbidden selection.
 
 #### Usage
-1. Create a new database
+1. Create a new database.
 Recommended name for your database : data_didascalies
-
 2. Lauch the recipe :
 ```bash
 (plumcot-prodigy) plumcot-prodigy$ prodigy check_didascalies.py data_didascalies <show_name> <season> <episode> <confidence_index> -F plumcot_prodigy/check_didascalies.py
@@ -117,6 +126,7 @@ e.g : ./process_alignment.py StarWars.Episode06
 ![select_characters](../screenshots/select_chars.png)
 
 Corresponding script : [select_characters.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/plumcot_prodigy/select_characters.py)
+
 This recipe is a version without speaker diarization.
 
 1. Process images
@@ -129,7 +139,7 @@ e.g : prodigy select_char select_characters 24.Season01.Episode01 -F plumcot_pr
 ```
 When selection is finished, press _a_ (for _accept_) .
 If no selection is done, press _space_ (for _ignore_) or _x_.
-You can select multiple images when multiple characters are speaking at the same time and uttering the same sentence.
+You can select multiple images when multiple characters are uttering the same sentence at the same time.
 
 4. Save your annotations
 5. Process your annotations
@@ -165,7 +175,7 @@ Active learning annotation with speaker recognition model.
 
 e.g : prodigy pyannote.speaker speakers_data speech_turns.jsonl -speakers=speakers.txt -allow-new-speaker -F plumcot_prodigy/speaker.py
 ```
-The recipe uses the same principle as select characters : select corresponding locutor thanks to images.
+The recipe uses the same principle as select_characters : select corresponding locutor thanks to images.
 Multiple selections are _not allowed_.
 
 This recipe stores annotations to make predictions on the current speaker.
@@ -197,14 +207,14 @@ Addressee annotation consists in making relations between sentences and speakers
 
 #### Usage
 1. Create a database
-
 2. Lauch recipe
 ```bash
 (plumcot-prodigy) plumcot-prodigy$ prodigy addressee addressee_data <episode_name> -F plumcot_prodigy/adressee.py
 ```
 The head of the relation is always a speaker whereas the child of the relation is always a sentence (see first illustration).
+Relations are pre-selected but you may need to correct it manually.
 
-Sometimes relations can’t be annotated because one speaker is talking during 5 speech turns. In this case, a labelling interface is available to label the sentence with its addressee (see second illustration).
+Sometimes relations are not pre-selected because one speaker is talking during 5 speech turns. In this case, a labelling interface is available to label the sentence with its addressee (see second illustration).
 Labelling can also be used when the addressee is addressed to multiple speakers which are not in the 5 speech turns.
 Combination of labelling and selection is allowed.
 
@@ -212,7 +222,6 @@ Press _a_ when addressee annotation is done for the current example.
 Press _space_ when no annotations are done/needed.
 
 3. Save your annotations
-
 4. Process your annotations
 ```bash
 (plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./process_addressee.py <episode> <data_base_name>
@@ -256,7 +265,7 @@ GameOfThrones.Season01.Episode05 renly_baratheon 481.36 481.36 . 0.95 _ petyr_ba
 
 #### Entity linking - 1st, 2nd persons & names
 
-This first par of entity linking annotations uses addressees to assign EL to 2nd person pronouns, and current speaker for 1st person pronouns.
+This first part of entity linking annotation uses addressees to assign EL to 2nd person pronouns, and current speaker for 1st person pronouns.
 
 The [script](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/annotation_scripts/add_entity_linking.py) also uses knowledge given by the user to assign EL to names and nicknames:
 ```bash
@@ -275,13 +284,17 @@ knowledge = {
 ```
 Usage:
 1. Make sure that addressee annotation is done
-2. Add names to the knowledge dictionary in the script. Add a new show dictionary if you work on a new show.
-3. Lauch script
+2. Add names to the knowledge dictionary in the script. Add a new show dictionary if you work on a new show. 
+
+Warning : each key in a dictionary corresponds to a firstname/name/nickame, and each value to a character id under the format firstname_name. Those ids must be present in _characters.txt_ file of the show you are annotating (Plumcot/data/{serie_uri}/characters.txt).
+4. Lauch script
 ```bash
 (plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./add_entity_linking.py <episode_name>
 
 e.g ./add_entity_linking.py TheWalkingDead.Season01.Episode02
 ```
+The script will add EL to your alignment file.
+
 #### Entity linking - 3rd person & names
 
 ![entity_linking](../screenshots/entity_linking.png)
@@ -298,7 +311,7 @@ Usage:
 ```
 The recipe displays sentences one by one, and pre-selects nouns and pronouns.
 If preselections are not nouns or pronouns, skip the example (_space_).
-If preselections are nouns or pronouns, corresponding to one character, enter his name in the first input. Press _a_.
+If preselections are nouns or pronouns, corresponding to one character, enter his name in the first input. The input will propose characters based on what you are writing. Select the right character and Press _a_.
 If preselections are nouns or pronouns, corresponding to multiple characters, enter their names in separate inputs, and use the labelling tool to assign right labels to right nouns/pronouns (see the illustration). Press _a_.
 
 3. Save your annotations
