@@ -146,7 +146,7 @@ def entity_linking(ep):
                             #print("FIND TOKEN",dic["text"])
                             #print(dic["start"], dic["end"])
                             corresponding_token = to_return["text"][dic["start"]:dic["end"]].lower()
-                            spans.append({"start" : dic["start"], "end" : dic["end"], "token_start": position, "token_end":position, "label": "EL"})
+                            spans.append({"start" : dic["start"], "end" : dic["end"], "token_start": position, "token_end":position, "label": "EL1"})
 
                 to_return["spans"] = spans  
 
