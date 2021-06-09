@@ -178,17 +178,31 @@ if __name__ == '__main__':
                         'ben': 'ben', 'bogdan': 'bogdan_wolynetz', 'chad': 'chad', 'emilio': 'emilio_koyama',
                         'wendy': 'wendy'
                     },
-        #Friends
+        # Friends
         "Friends": {'monica': 'monica_geller', 'joey': 'joey_tribbiani', 'chandler': 'chandler_bing', 'phoebe': 
-                    'phoebe_buffay', 'ross': 'dr_ross_geller', 'rachel': 'rachel_green', 'jasmine': 'jasmine', 
-                    'paul': 'paul','franny': 'franny', 'marsha': 'marsha', 'carol': 'carol_willick',
-                    'judy': 'judy_geller', 'jack': 'jack_geller', 'susan': 'susan', 'barry': 'barry', 'bobby': 'bobby',
-                    'paula': 'paula', 'alan': 'alan', 'lizzy': 'lizzy', 'leslie': 'leslie', 'kiki': 'kiki', 'joanne': 'joanne',
-                    'angela': 'angela', 'janice': 'janice', 'bob': 'bob', 'aurora': 'aurora', 'shelly': 'shelly',
-                    'terry': 'terry', 'heckles': 'mr_heckles', 'paolo': 'paolo'
-                    },
-
-    }
+                'phoebe_buffay', 'ross': 'dr_ross_geller', 'rachel': 'rachel_green', 'jasmine': 'jasmine', 
+                'paul': 'paul','franny': 'franny', 'marsha': 'marsha', 'carol': 'carol_willick',
+                'judy': 'judy_geller', 'jack': 'jack_geller', 'susan': 'susan', 'barry': 'barry', 'bobby': 'bobby',
+                'paula': 'paula', 'alan': 'alan', 'lizzy': 'lizzy', 'leslie': 'leslie', 'kiki': 'kiki', 'joanne': 'joanne',
+                'angela': 'angela', 'janice': 'janice', 'bob': 'bob', 'aurora': 'aurora', 'shelly': 'shelly',
+                'terry': 'terry', 'heckles': 'mr_heckles', 'paolo': 'paolo', 'max': 'max', 'david': 'david',
+                'sandy': 'sandy', 'bobby': 'fun_bobby', 'dick': 'dick_clark','jay': 'jay_leno', 'nora': 'nora_tyler_bing',
+                },
+        # BSG
+        "BattlestarGalactica" : { 'lee': 'cpt_lee_adama', 'president': 'president_laura_roslin', 'laura': 'president_laura_roslin',
+                             'roslin': 'president_laura_roslin', 'gaius': 'dr_gaius_baltar', 'baltar': 'dr_gaius_baltar',
+                             'billy': 'billy_keikeya', 'keikeya': 'billy_keikeya', 'socinus': 'crewman_specialist_socinus',
+                             'tyrol': 'chief_galen_tyrol', 'sharon': 'lt_sharon_valerii', 'boomer': 'lt_sharon_valerii',
+                             'dualla': 'officer_anastasia_dualla', 'william': 'admiral_william_adama', 'saul': 'colonel_saul_tigh',
+                             'crashdown': 'crashdown', 'karl': 'captain_karl_agathon', 'crashdown': 'crashdown', 'agathon': 'captain_karl_agathon',
+                             'cally': 'crewman_specialist_cally_henderson', 'gaeta': 'lt_felix_gaeta', 'tom': 'tom_zarek',
+                             'zarek': 'tom_zarek', 'kara': 'captain_kara_thrace', 'starbuck': 'captain_kara_thrace',
+                            'aaron': 'aaron_doral', 'boxey': 'boxey', 'mason': 'mason','hotdog': 'lt_brendan_constanza',
+                             'cottle': 'dr_cottle', 'zak': 'zak_adama', 'chuckles': 'chuckles',
+                
+    },
+    
+}
 
     # #### Find entity linking
     for sentence in sentences:
@@ -197,19 +211,19 @@ if __name__ == '__main__':
 
             # find 1st pronoun without EL
             if str(word).lower() in firt_prn and (word._.entity_linking == '_' or word._.entity_linking == '?'):
-                print("FIRST PRONOUN FOUND",sentence, word, word._.entity_linking) 
+                print("FIRST PRONOUN FOUND",sentence) 
                 word._.entity_linking = word._.speaker
                 print("----->", word, word._.entity_linking)
 
             # find 2nd pronoun without EL
             if str(word).lower()  in second_prn and (word._.entity_linking == '_' or word._.entity_linking == '?'):
-                print("SECOND PRONOUN FOUND",sentence, word, word._.entity_linking)
+                print("SECOND PRONOUN FOUND",sentence)
                 word._.entity_linking = word._.addressee
                 print("----->", word, word._.entity_linking)
 
             for el, val in knowledge[serie].items() : 
                 if str(word).lower() == el and (word._.entity_linking == '_' or word._.entity_linking == '?'):
-                    print("NAME FOUND",sentence, word, word._.entity_linking, val)
+                    print("NAME FOUND",sentence)
                     word._.entity_linking = val
                     print("----->", word, word._.entity_linking)
 
@@ -238,6 +252,10 @@ if __name__ == '__main__':
             confidence = "{:.2f}".format(word._.confidence)
             start_time = "{:.2f}".format(word._.start_time)
             end_time = "{:.2f}".format(word._.end_time)
+            if word._.entity_linking == "?":
+                word._.entity_linking = "_"
+            if word._.entity_linking == "" or word._.addressee == " " :
+                word._.entity_linking = "_"
             new_file.write(f'{episode} {word._.speaker} {start_time} {end_time} {word} {confidence} {word._.entity_linking} {word._.addressee}\n')
 
     new_file.close()

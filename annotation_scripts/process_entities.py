@@ -75,7 +75,7 @@ if __name__ == '__main__':
                 # take annotation from "spans"
                 for span in el["spans"]:
 
-                    if span["label"] == "EL":
+                    if span["label"] == "EL1":
                         # find  entities
                         token = el["text"][span["start"]: span["end"]+1]
                         label = span["label"]
@@ -144,6 +144,10 @@ if __name__ == '__main__':
             confidence = "{:.2f}".format(word._.confidence)
             start_time = "{:.2f}".format(word._.start_time)
             end_time = "{:.2f}".format(word._.end_time)
+            
+            if word._.entity_linking == "" or word._.addressee == " " :
+                word._.entity_linking = "_"
+                
             new_file.write(f'{episode} {word._.speaker} {start_time} {end_time} {word} {confidence} {word._.entity_linking} {word._.addressee}\n')
 
     new_file.close()

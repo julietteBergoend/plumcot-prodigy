@@ -307,7 +307,7 @@ Usage:
 1. Create a new database
 2. Lauch recipe
 ```bash
-(plumcot-prodigy) plumcot-prodigy$ prodigy entity_linking my_dataset <episode_name> -F plumcot_prodigy/entity.py
+(plumcot-prodigy) plumcot-prodigy$ prodigy entity_linking entity_data <episode_name> -F plumcot_prodigy/entity.py
 ```
 The recipe displays sentences one by one, and pre-selects nouns and pronouns.
 If preselections are not nouns or pronouns, skip the example (_space_).

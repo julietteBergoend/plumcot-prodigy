@@ -171,6 +171,11 @@ if __name__ == '__main__':
             confidence = "{:.2f}".format(word._.confidence)
             start_time = "{:.2f}".format(word._.start_time)
             end_time = "{:.2f}".format(word._.end_time)
+            if word._.addressee == "?":
+                word._.addressee = "_"
+            if word._.addressee == "" or word._.addressee == " " :
+                word._.addressee = "_"
+            
             new_file.write(f'{episode_to_process} {word._.speaker} {start_time} {end_time} {word} {confidence} {word._.entity_linking} {word._.addressee}\n')
 
     new_file.close()
