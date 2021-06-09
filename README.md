@@ -16,6 +16,7 @@ $ conda activate plumcot-prodigy
 
 # install prodigy 
 $ (plumcot-prodigy) pip install prodigy.*.whl
+$ (plumcot-prodigy) pip install -r requirements.txt
 
 # download spaCy english model
 $ (plumcot-prodigy) python -m spacy download en_core_web_sm
@@ -28,6 +29,16 @@ Added dataset my_dataset to database SQLite.
 ✨  Starting the web server at http://localhost:8080 ...
 Open the app in your browser and start annotating!
 
+```
+Install libraries for speaker annotation :
+- install [pytorch](https://pytorch.org/)
+- install develop branch of [pyannote.audio](https://github.com/pyannote/pyannote-audio/tree/develop) :
+```bash
+pip install https://github.com/pyannote/pyannote-audio/archive/develop.zip
+```
+- install [faiss](https://github.com/facebookresearch/faiss) :
+```bash
+conda install -c pytorch faiss-cpu
 ```
 
 ![check_forced_alignment recipe](screenshots/check_forced_alignment.jpg)
