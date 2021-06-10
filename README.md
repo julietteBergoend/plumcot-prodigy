@@ -7,7 +7,7 @@ Prodigy recipes for PLUMCOT dataset
 
 ```bash
 # clone this repository
-$ git clone https://github.com/hbredin/plumcot-prodigy.git
+$ git clone https://github.com/julietteBergoend/plumcot-prodigy.git
 $ cd plumcot-prodigy
 
 # create and activate conda environment
