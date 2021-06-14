@@ -317,7 +317,7 @@ If preselections are nouns or pronouns, corresponding to multiple characters, en
 3. Save your annotations
 4. Process your annotations
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ <episode_name> <database_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$./process_entities.py <episode_name> <database_name>
 
 e.g : ./process_entities.py TheWalkingDead.Season01.Episode02 test.jsonl
 ```
