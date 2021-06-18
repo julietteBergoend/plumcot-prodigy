@@ -118,9 +118,9 @@ Corresponding script : [resize_images](https://github.com/julietteBergoend/plumc
 
 Usage:
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./process_alignment.py <episode_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./resize_images <episode_name>
 
-e.g : ./process_alignment.py StarWars.Episode06
+e.g : ./resize_images 24.Season01.Episode01
 ```
 #### Select_character
 ![select_characters](../screenshots/select_chars.png)
