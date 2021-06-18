@@ -79,7 +79,7 @@ class SpeakerStream:
             emb_device = torch.device("cpu")
 
         self.embedding = Model.from_pretrained(
-            "hbredin/SpeakerEmbedding-XVectorMFCC-VoxCeleb",
+            "pyannote/embedding",
             map_location=emb_device,
             strict=False,
         )

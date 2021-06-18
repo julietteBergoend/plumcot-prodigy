@@ -97,8 +97,6 @@ def load_credits(episode, series, path):
 def load_photo(characters, serie_uri, path):  
     """Load photos for the show's characters
     """
-    directory = "/vol/work1/bergoend/pyannote-db-plumcot"
-
     # open json file corresponding to the current show
     with open(os.path.join(path, f"{serie_uri}/images/images.json")) as f:
         data = json.load(f)
@@ -120,7 +118,7 @@ def load_photo(characters, serie_uri, path):
 
                 # characters without centroid
                 except KeyError:
-                    char_pictures[name] = os.path.join(directory, val['paths'][0])
+                    char_pictures[name] = name
 
             # characters without photo
             elif character == name and val['count'] == 0:

@@ -123,6 +123,9 @@ def speech_turns(ep):
     season = ep.split('.')[1]
     ep = ep.split('.')[2]
     
+    # labels to display in relations
+    label_list = []
+    
     # load episode list
     episodes_list = load_episodes(DATA_PLUMCOT, show, season, ep)
 
@@ -151,6 +154,8 @@ def speech_turns(ep):
                 
                 # keep track of the sentence's id in alignment file
                 speech_turns.append( ( (idx, sentence), (sentence._.speaker, str(sentence)) ) )
+                if '#' not in str(sentence._.speaker):
+                    label_list.append(sentence._.speaker)
 
             # process sentences 5 by 5, format data for Prodigy relations_view
             for slices in range(0, len(speech_turns), 5):
@@ -285,6 +290,7 @@ def speech_turns(ep):
                     end_time = s[4]["meta"]["aligned"]._.end_time + 0.5
                     #load mkv for corresponding video extract
                     video_excerpt = mkv_to_base64(mkv, start_time, end_time)
+                    print('\n',s[0])
                 
                 else:
                     video_excerpt = mkv_to_base64(mkv, 1.0, 2.0)
@@ -297,6 +303,7 @@ def speech_turns(ep):
                     to_return["relations"] = rel_list
                     to_return["meta"] = {'first':first, 'second': second , 'third': third, 'fourth': fourth, 'fifth':fifth}
                     to_return["episode"] = episode
+                    to_return["label_list"] = list(set(label_list))
                     
                     yield to_return
 
@@ -320,12 +327,9 @@ def addresse(dataset: Text, episode: Text) -> Dict:
     # create labels list
     episode = None    
     for i in stream:
-        episode = i["episode"]
+        labels = i["label_list"]
         break
-    series = episode.split('.')[0]
-    labels = load_credits(episode, series, DATA_PLUMCOT)
-    labels = labels[:45]
-    labels = labels + ["multiple_persons"]
+    labels = sorted(labels + ["multiple_persons"])
     print(labels)
     return {
         "dataset": dataset,
