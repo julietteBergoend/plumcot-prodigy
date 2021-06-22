@@ -9,7 +9,7 @@
 #
 
 """Usage:
-process_alignment.py <episode_name> <user_path>
+process_alignment.py <episode_name> <path/to/corpora>
 """
 import os
 
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     args = docopt(__doc__)
     
     # path to Plumcot data
-    DATA_PLUMCOT = args["<user_path>"]
+    DATA_PLUMCOT = args["<path/to/corpora>"]
     
     episode = args["<episode_name>"]
     show = episode.split('.')[0]

@@ -28,53 +28,37 @@ def load_files(series, episode, path):
 
     return mkv, aligned, sentences
     
-def load_episodes(path, episode): 
+def load_episodes(path, show, season): 
     """Load shows' episodes
     
        Arguments : path : path to Plumcot/data, 
                    show : show name (e.g Lost), 
-                   season : season to annotate (e.g Season01), 
-                   ep : episode to annotate (e.g Episode01)
+                   season (optional): season to annotate (e.g Season01), 
        
        Return episode list to annotate
-    """
-    # if episode name is known, return it in a list
-    if episode is not None :
-        
-        episodes_list = [episode]
-        print("Number of episodes to annotate :", len(episodes_list))
-        
-        return episodes_list
-    
-    # else, find all the episodes of the current season  
-    else :
-       
-        # process serie or film
-        if len(episode.split('.')) == 3:
-            series, _, _ = episode.split('.')
-        elif len(episode.split('.')) == 2:
-            series, _ = episode.split('.')
+    """    
+    # find all the episodes of the current season  
 
-        series = [series]
-        print("\nCurrent show :", series)
+    series = [show]
+    print(f"\nCurrent show :{show}.{season}")
 
-        # stack all episodes of the show
-        all_episodes_series = ""
+    # stack all episodes of the show
+    all_episodes_series = ""
 
-        # path to the show
-        series_paths = [os.path.join(path, name) for name in series]
+    # path to the show
+    series_paths = [os.path.join(path, name) for name in series]
 
-        # read episode.txt of each show
-        for serie_name in series_paths:
-            with open(os.path.join(serie_name,"episodes.txt")) as file:  
-                episodes_file = file.read() 
-                all_episodes_series += episodes_file
+    # read episode.txt of each show
+    for serie_name in series_paths:
+        with open(os.path.join(serie_name,"episodes.txt")) as file:  
+            episodes_file = file.read() 
+            all_episodes_series += episodes_file
 
-        # final list of all episodes (season x)
-        episodes_list = [episode.split(',')[0] for episode in all_episodes_series.split('\n') if season in episode]
+    # final list of all episodes (season x)
+    episodes_list = [episode.split(',')[0] for episode in all_episodes_series.split('\n') if season in episode]
 
-        print("Number of episodes to annotate :", len(episodes_list))
-        return episodes_list
+    print("Number of episodes to annotate :", len(episodes_list))
+    return episodes_list
 
 def load_credits(episode, series, path):
     

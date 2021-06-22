@@ -31,22 +31,23 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
 
     return examples
 
-def stream(show_name, season):
+def stream(show_name, season, user_path):
     """ Displays one excerpt from the begining of the current episode, and one from the end.  
         The aim is to check if the text in the begining and the end of the episode corresponds with the video.
     
         Arguments :show : show name (e.g Lost), 
-                   season : season to annotate (e.g Season01), 
+                   season : season to annotate (e.g Season01),
+                   user_path : path to Plumcot corpora
     
-        Start prodigy : prodigy check_forced_alignment data_alignment <show_name> <season> -F plumcot_prodigy/check_alignment.py
+        Start prodigy : prodigy check_forced_alignment data_alignment <show_name> <season> <path/to/corpora>-F plumcot_prodigy/check_alignment.py
 
         Displays begining and ending excerpts of each episode in the shows
     """
     # path to Plumcot
-    DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
+    DATA_PLUMCOT = user_path
     
     # load episodes list
-    episodes_list = load_episodes(DATA_PLUMCOT, show_name, season, None)
+    episodes_list = load_episodes(DATA_PLUMCOT, show_name, season)
     
     for episode in episodes_list:
             
@@ -114,11 +115,12 @@ def stream(show_name, season):
     dataset=("Dataset to save annotations to", "positional", None, str),
     show=("Name of the show to annotate", "positional", None, str),
     season=("Season to annotate (e.g : Season01)", "positional", None, str),
+    user_path=("Path to plumcot corpora", "positional", None, str),
 )
-def plumcot_video(dataset: Text, show: Text, season: Text) -> Dict:
+def plumcot_video(dataset: Text, show: Text, season: Text, user_path: Text) -> Dict:
     return {
         "dataset": dataset,
-        "stream": stream(show, season),
+        "stream": stream(show, season, user_path),
         "before_db": remove_video_before_db,
         "view_id": "blocks",
         "config": {

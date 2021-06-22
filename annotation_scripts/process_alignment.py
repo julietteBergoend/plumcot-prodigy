@@ -18,7 +18,7 @@ from docopt import docopt
 from pathlib import Path
 
 # path to alignment database
-DATABASE_PATH = Path(__file__).parent.absolute().parent / "prodigy_databases"
+DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
 
 if __name__ == '__main__':
     

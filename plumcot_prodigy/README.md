@@ -10,16 +10,17 @@ Make sure that all your alignment files contain lines of length 8, as follow
 
 e.g : TheWalkingDead.Season01.Episode02 carl_grimes 8.70 9.06 Mom 0.10 _ _
 ```
-Each line must contain : the episode reference, speaker name, start time of the word, end time of the word, one word, confidence score, entity linking (EL) (represented by “_”, “?”, or “character_name”), addressee (represented by “_”*, “?”*, or “character_name”).
+Each line must contain : the episode reference, speaker name, start time of the word, end time of the word, one word, confidence score, entity linking (EL) (represented by “_(underscore)”, “?”, or “character_name”), addressee (represented by “_(underscore)”*, “?”*, or “character_name”).
 
 Corresponding script : [adapt_aligned_file.py](https://github.com/julietteBergoend/plumcot-prodigy/blob/main/annotation_scripts/adapt_aligned_file.py)
 
 Usage :
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./adapt_aligned_file.py <episode_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./adapt_aligned_file.py <episode_name> </path/to/corpora/>
 
 e.g : ./adapt_aligned_file.py 24.Season01.Episode01
 ```
+<path_to_corpora> : corpora containing wav, mkv and txt files
 
 The script will create a temp file with a copy of the previous transcript, and a new aligned file with one or two “?” sign(s) at the end of each line (depending on the length of the lines). 
 
@@ -46,11 +47,10 @@ Recommended name for your database : data_alignment
 ```
 2. Lauch recipe
 ```bash
-(plumcot-prodigy) plumcot-prodigy$ prodigy check_forced_alignment <dataset_name> <show_name> <season> -F plumcot_prodigy/check_alignment.py
+(plumcot-prodigy) plumcot-prodigy$ prodigy check_forced_alignment <dataset_name> <episode_name> <path/to/corpora> -F plumcot_prodigy/check_alignment.py
 
-e.g : prodigy check_forced_alignment data_alignment Lost Season01 -F plumcot_prodigy/check_alignment.py
+e.g : prodigy check_forced_alignment data_alignment Lost Season01 /home/toto/corpora/ -F plumcot_prodigy/check_alignment.py
 ```
-<path_to_corpora> : corpora containing wav, mkv and txt files
 
 Press _a_ (for _accept_) when the audio corresponds to the text.
 Press _x_ (for _reject_) if not.

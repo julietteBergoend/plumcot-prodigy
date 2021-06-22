@@ -36,8 +36,9 @@ def stream_text(episode, conf, user_path):
     
         Arguments : ep : episode to annotate,
                     conf : float number corresponding to confidence of sentences
+                    user_path : path to Plumcot corpora
     
-        Start prodigy : prodigy check_didascalies.py correction_data <show_name> <season> <episode> <confidence_index> -F plumcot_prodigy/check_didascalies.py
+        Start prodigy : prodigy check_didascalies.py correction_data <episode_name> <confidence_index> <path/to/corpora>-F plumcot_prodigy/check_didascalies.py
     """
     
     # path to Plumcot data
@@ -50,7 +51,7 @@ def stream_text(episode, conf, user_path):
         series, _ = episode.split('.')
     
     # load episodes list
-    episodes_list = load_episodes(DATA_PLUMCOT, episode)
+    episodes_list = [episode]
     
     for episode in episodes_list:
         print("\nCurrent Episode :", episode)
