@@ -17,7 +17,7 @@ from pathlib import Path
 DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
 
 # path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
+DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "test_data"
 
 if __name__ == '__main__':
     
@@ -46,17 +46,15 @@ if __name__ == '__main__':
 
         # read json
         el = json.loads(el)
-        
-        # meta data
-        meta = el['meta']
 
-        # find elements to delete in current episode
-        if episode_to_process in meta['episode'] and 'reject' in el['answer'] :
+        # find elements to delete
+        if 'reject' in el['answer'] :
 
             # displayed tokens in Prodigy (left and right context + sentence)
             tokens = el['tokens']            
             # words to delete
             delete = el['spans']
+            meta = el['meta']
             # processed sentence in Prodigy (without context)
             initial_sent = el['sentence']
             # context (disabled)
@@ -65,39 +63,36 @@ if __name__ == '__main__':
 
             # token list of tokens displayed in Prodigy
             token_list = [token['text'] for token in tokens]
+            print("\nEpisode :", meta['episode'])
 
             # load forced alignment
             episode = meta['episode'].split('.')        
-            aligned = f"{DATA_PLUMCOT}/{episode[0]}/forced-alignment/{meta['episode']}.aligned"  
+            aligned = f"{DATA_PLUMCOT}/{episode[0]}/forced-alignment/{meta['episode']}.aligned"       
             transcript = forced_alignment(aligned)      
             sentences = list(transcript.sents)
 
-            for sentence in sentences:
+            for idx, sentence in enumerate(sentences):
 
                 # find left context
-                if str(sentence) == left:
+                if idx == el["sentence_id"]:
+                    print("\nAnnotated sentence in Prodigy :", str(sentence))
+                    # delete
+                    for dic in delete:
+                        if dic['label'] == "DELETE":                            
+                            # find the words group to delete in initial sentence
+                            to_delete = " ".join(token_list[dic['token_start']:dic['token_end']+1])
 
-                    # find initial sentence
-                    center = sentences[sentences.index(sentence) +1]
-                    index = sentences.index(center)
+                            # delete didascalie
+                            if to_delete in str(sentence):                                
+                                new_sent = str(sentence).replace(to_delete, '')
+                                print("New sentence :", new_sent)
+                                center = " "
+                                corrections[(meta['episode'], idx)] = (center, new_sent)
 
-                    if str(center) == initial_sent:
-                        print("\nAnnotated sentence in Prodigy :", str(center))
-                        # delete
-                        for dic in delete:
-                            if dic['label'] == "DELETE":                            
-                                # find the words group to delete in initial sentence
-                                to_delete = " ".join(token_list[dic['token_start']:dic['token_end']+1])
+                # continue until initial sentence is found
+                else:
+                    continue
 
-                                # delete didascalie
-                                if to_delete in initial_sent:                                
-                                    new_sent = initial_sent.replace(to_delete, '')
-                                    print("New sentence :", new_sent)
-                                    corrections[(meta['episode'], index)] = (center, new_sent)
-
-                    # continue until initial sentence is found
-                    else:
-                        continue
 
     print("\nDone. Number of processed sentences :", len(corrections))
 

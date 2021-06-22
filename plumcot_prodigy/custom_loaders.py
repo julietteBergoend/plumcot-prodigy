@@ -30,7 +30,7 @@ def load_files(series, episode, path):
 
     return mkv, aligned, sentences
     
-def load_episodes(path, show, season, ep): 
+def load_episodes(path, episode): 
     """Load shows' episodes
     
        Arguments : path : path to Plumcot/data, 
@@ -41,9 +41,8 @@ def load_episodes(path, show, season, ep):
        Return episode list to annotate
     """
     # if episode name is known, return it in a list
-    if ep is not None :
+    if episode is not None :
         
-        episode = f"{show}.{season}.{ep}"
         episodes_list = [episode]
         print("Number of episodes to annotate :", len(episodes_list))
         
@@ -51,9 +50,15 @@ def load_episodes(path, show, season, ep):
     
     # else, find all the episodes of the current season  
     else :
-        
-        series = [show]
-        print("\nCurrent show :", show, "\nCurrent season :", season)
+       
+        # process serie or film
+        if len(episode.split('.')) == 3:
+            series, _, _ = episode.split('.')
+        elif len(episode.split('.')) == 2:
+            series, _ = episode.split('.')
+
+        series = [series]
+        print("\nCurrent show :", series)
 
         # stack all episodes of the show
         all_episodes_series = ""

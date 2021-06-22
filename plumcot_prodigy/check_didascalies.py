@@ -32,32 +32,31 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     return examples
 
 
-def stream_text(show_name, season, ep, conf):
+def stream_text(episode, conf):
     """ Displays sentences with confidence index under conf argument.
     
-        Arguments : show : show name (e.g Lost), 
-                    season : season to annotate (e.g Season01),
-                    ep : episode to annotate (e.g Episode01),
+        Arguments : ep : episode to annotate,
                     conf : float number corresponding to confidence of sentences
     
         Start prodigy : prodigy check_didascalies.py correction_data <show_name> <season> <episode> <confidence_index> -F plumcot_prodigy/check_didascalies.py
     """
     
     # path to Plumcot data
-    DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
+    #DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
+    DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "test_data/"
+    
+    # process serie or film
+    if len(episode.split('.')) == 3:
+        series, _, _ = episode.split('.')
+    elif len(episode.split('.')) == 2:
+        series, _ = episode.split('.')
     
     # load episodes list
-    episodes_list = load_episodes(DATA_PLUMCOT, show_name, season, ep)
+    episodes_list = load_episodes(DATA_PLUMCOT, episode)
     
     for episode in episodes_list:
         print("\nCurrent Episode :", episode)
         print("Confidence index :", conf)
-
-        # process serie or film
-        if len(episode.split('.')) == 3:
-            series, _, _ = episode.split('.')
-        elif len(episode.split('.')) == 2:
-            series, _ = episode.split('.')
             
         mkv, aligned, sentences = load_files(series, episode, DATA_PLUMCOT)
         
@@ -68,13 +67,11 @@ def stream_text(show_name, season, ep, conf):
             # sort sentences by confidence, add unique identifier to sentences
             confidence_per_sentence = {(sentence, sentences.index(sentence)) : sentence._.confidence for sentence in sentences}
             sorted_confidence_per_sentence = {k: v for k, v in sorted(confidence_per_sentence.items(), key=lambda item: item[1])} 
-
             # select sentences with a confidence lower than x
-            sentences_choice = [sentence[0] for sentence, confidence in sorted_confidence_per_sentence.items() if  confidence <= conf ]
-
+            sentences_choice = [(sentence[0], sentence[1]) for sentence, confidence in sorted_confidence_per_sentence.items() if  confidence <= conf ]
             ponct = "\'\"-.,!?<>/"
 
-            for sentence in sentences_choice :
+            for sentence, idx in sentences_choice :
 
                 # be aware of video excerpt of len(0)
                 if str(sentence) not in ponct and sentence._.end_time-sentence._.start_time != 0.0:
@@ -82,12 +79,12 @@ def stream_text(show_name, season, ep, conf):
                     # context of the sentences, if exists
                     try :
                         if sentences.index(sentence) != 0:
-                            left = sentences[sentences.index(sentence)-1]
-                            right = sentences[sentences.index(sentence)+1]
+                            left = sentences[idx-1]
+                            right = sentences[idx+1]
                         # beug : left index = last sentence index in the list when current sentence is 0
                         else:
                             left = " "
-                            right = sentences[sentences.index(sentence)+1]
+                            right = sentences[idx+1]
 
                     except IndexError:
                         left = " "
@@ -114,6 +111,7 @@ def stream_text(show_name, season, ep, conf):
                                         "text": f"{sentence}",
                                         "left": f"{left}",
                                         "right": f"{right}",
+                                        "sentence_id" : idx,
                                        "meta": {"confidence": confidence, "start": start_time, 
                                                 "end": end_time, "episode": episode, "mkv_path": mkv},
                                    }
@@ -121,13 +119,11 @@ def stream_text(show_name, season, ep, conf):
 @prodigy.recipe(
     "check_didascalies",
     dataset=("The dataset to save to", "positional", None, str),
-    show=("Name of the show to annotate", "positional", None, str),
-    season=("Season to annotate (e.g : Season01)", "positional", None, str),
-    episode=("Episode to annotate (e.g : Episode01)", "positional", None, str),
+    episode=("Episode to annotate (e.g : TheWalkingDead.Season01.Episode01)", "positional", None, str),
     conf=("Display sentences under this confidence score", "positional", None, float),
 )
      
-def select_text(dataset: Text, show: Text, season: Text, episode: Text, conf: float) -> Dict:      
+def select_text(dataset: Text, episode: Text, conf: float) -> Dict:      
 
     def disable_left_right(stream, lang="en"):  
         """
@@ -167,7 +163,7 @@ def select_text(dataset: Text, show: Text, season: Text, episode: Text, conf: fl
             yield eg
                 
     #stream
-    stream = stream_text(show, season, episode, conf)   
+    stream = stream_text(episode, conf)   
     stream = disable_left_right(stream) 
 
     return {
