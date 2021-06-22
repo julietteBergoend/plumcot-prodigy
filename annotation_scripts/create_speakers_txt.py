@@ -4,7 +4,7 @@
 ### Create speakers.txt file for speaker.py recipe
 ### Output : list of speakers in a txt file
 """Usage:
-process_alignment.py <id_series>
+process_alignment.py <id_series> <path_to_corpora>
 """
 
 import os
@@ -15,12 +15,12 @@ from pathlib import Path
 # path to plumcot-prodigy
 PATH = Path(__file__).absolute().parent.parent
 
-# path to shows directories
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
-
 if __name__ == '__main__':
     
     args = docopt(__doc__)
+    
+    # path to shows directories
+    DATA_PLUMCOT = args["<path_to_corpora>"]
     
     id_series = args["<id_series>"]
     

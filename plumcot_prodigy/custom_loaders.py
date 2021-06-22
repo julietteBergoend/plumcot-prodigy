@@ -85,29 +85,23 @@ def load_photo(characters, serie_uri, path):
     """Load photos for the show's characters
     """
     # open json file corresponding to the current show
-    with open(os.path.join(path, f"{serie_uri}/images/images.json")) as f:
-        data = json.load(f)
+    data = []
+    with open(os.path.join(path, f"{serie_uri}/images/images.json"), "r") as f:
+        for line in f :
+            data.append(json.loads(line))
 
     # dictionary character : url to the character's picture
     char_pictures = {}
-    # dictionaries for characters
-    characters_dic = data['characters']
 
     # find centroid for each character in the current episode
-    for character in characters : 
-        for name, val in characters_dic.items():
-
+    for name in characters : 
+        for d in data:
             # characters with a centroid
-            if character == name and val['count'] != 0:
-                try:
-                    if val['centroid'] :
-                        char_pictures[name] = val['centroid'] 
-
-                # characters without centroid
-                except KeyError:
-                    char_pictures[name] = name
-
-            # characters without photo
-            elif character == name and val['count'] == 0:
-                char_pictures[name] = name
+            if name == d[0]:
+                char_pictures[name] = os.path.join(f"{path}/{serie_uri}/images", d[1])
+    # characters without centroid
+    for name in characters :
+        if name not in char_pictures:
+            char_pictures[name] = name
+    print(char_pictures)
     return char_pictures 

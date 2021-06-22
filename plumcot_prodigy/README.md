@@ -135,9 +135,9 @@ This recipe is a version without speaker diarization.
 2. Enter a new database
 3. Lauch recipe
 ```bash
-(plumcot-prodigy) plumcot-prodigy$ prodigy select_char select_characters <episode_name> -F plumcot_prodigy/select_characters.py
+(plumcot-prodigy) plumcot-prodigy$ prodigy select_char select_characters <episode_name> <path/to/corpora> -F plumcot_prodigy/select_characters.py
 
-e.g : prodigy select_char select_characters 24.Season01.Episode01 -F plumcot_prodigy/select_characters.py
+e.g : prodigy select_char select_characters 24.Season01.Episode01 /home/toto/corpora -F plumcot_prodigy/select_characters.py
 ```
 When selection is finished, press _a_ (for _accept_) .
 If no selection is done, press _space_ (for _ignore_) or _x_.
@@ -146,9 +146,9 @@ You can select multiple images when multiple characters are uttering the same se
 4. Save your annotations
 5. Process your annotations
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./replace_non_available_chars.py <episode> <data_base_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./replace_non_available_chars.py <episode> <data_base_name> <path_to_corpora>
 
-e.g : ./replace_non_available_chars.py 24.Season01.Episode01 characters.jsonl
+e.g : ./replace_non_available_chars.py 24.Season01.Episode01 characters.jsonl /home/toto/corpora
 ```
 Speaker annotations are applied directly to the alignment file.
 A temporary file is created with previous alignment.
@@ -163,11 +163,11 @@ Active learning annotation with speaker recognition model.
 1. Before annotation : format the data to annotate
   - create speech turn file :	this file gathers all speech turns without speaker in the alignment file.
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./create_speech_turns.py <episode_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./create_speech_turns.py <episode_name> <path_to_corpora>
 ```
   - create speakers file : this file is a list of all the speakers of the current show.
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./create_speakers_txt.py <id_series>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./create_speakers_txt.py <id_series> <path_to_corpora>
 ```
 2. Create a new database
 3. Lauch recipe
@@ -186,9 +186,9 @@ Predictions start after about 20 annotations.
 4. Save your annotations
 5. Process your annotations
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./replace_non_available_chars.py <episode> <data_base_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./replace_non_available_chars.py <episode> <data_base_name> <path_to_corpora>
 
-e.g : ./replace_non_available_chars.py 24.Season01.Episode01 speakers_data.jsonl
+e.g : ./replace_non_available_chars.py 24.Season01.Episode01 characters.jsonl /home/toto/corpora
 ```
 Speaker annotations are applied directly to the alignment file.
 A temporary file is created with previous alignment.

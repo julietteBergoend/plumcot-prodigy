@@ -34,27 +34,28 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
 
     return examples
 
-def stream_char(ep):
+def stream_char(episode, user_path):
     """ 
         Annotate not_available characters
         Displays lines with "not_available" character in aligned file
         Display pictures of all the characters of the current episode
         
         Arguments : ep : episode to annotate (e.g TheWalkingDead.Season01.Episode01),
+                    user_path : path to Plumcot corpora
             
-    Start prodigy : prodigy select_char select_characters <episode_name> -F plumcot_prodigy/recipes.py        
+    Start prodigy : prodigy select_char select_characters <episode_name> <user_path> -F plumcot_prodigy/recipes.py        
     """
     
     # path to shows directories
-    DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
+    DATA_PLUMCOT = user_path
     
-    show = ep.split('.')[0]
-    season = ep.split('.')[1]
-    ep = ep.split('.')[2]
+    show = episode.split('.')[0]
+    season = episode.split('.')[1]
+    ep = episode.split('.')[2]
     
     # load episodes list
-    episodes_list = load_episodes(DATA_PLUMCOT, show, season, ep)
-    print(episodes_list)
+    episodes_list = [episode]
+
     for episode in episodes_list:
         print("\nCurrent episode", episode)
         
@@ -87,9 +88,9 @@ def stream_char(ep):
             options = []
             for name, val in pictures.items():
                 # display photo in options
-                if name != val:
+                if "centroid" in val:
                     options.append({"id":name, "image":file_to_b64(val)})
-                elif name == val :                    
+                else :                    
                     # display character's name when no picture
                     options.append({"id":name, "text": name})
             # selection for all@ and #unknown#
@@ -149,10 +150,11 @@ def stream_char(ep):
     "select_char",
     dataset=("The dataset to save to", "positional", None, str),
     episode=("Episode to annotate (e.g : TheWalkingDead.Season01.Episode01", "positional", None, str),
+    user_path=("Path to Plumcot corpora", "positional", None, str),
 )
-def select_char(dataset: Text, episode: Text) -> Dict:
+def select_char(dataset: Text, episode: Text, user_path: Text) -> Dict:
         
-    stream = stream_char(episode) 
+    stream = stream_char(episode, user_path) 
     
     return {
         "dataset": dataset,   # save annotations in this dataset

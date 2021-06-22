@@ -253,7 +253,7 @@ class SpeakerStream:
                 serie = episode.split('.')[0]
                 
                 # path to Plumcot data
-                path = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
+                path = speech_turn["plumcot_path"]
                 
                 # images for choice view
                 im_path = f"{path}/{serie}/images"

@@ -2,7 +2,7 @@
 # coding: utf-8
 
 """Usage:
-replace_non_available_chars.py <episode> <data_base_name>
+replace_non_available_chars.py <episode> <data_base_name> <path_to_corpora>
 """
 
 # ### Replace "not_available" characters by a character name selected in select_characters or speaker.py recipes
@@ -16,13 +16,13 @@ import json
 # path to databases
 DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
 
-# path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
-
 if __name__ == '__main__':
     
     args = docopt(__doc__)
     
+    # path to corpora
+    DATABASE_PLUMCOT = args["<path_to_corpora>"]
+
     # episode name & json file
     episode_to_process = args["<episode>"]
     database_name = args["<data_base_name>"]
@@ -36,8 +36,8 @@ if __name__ == '__main__':
     serie = episode_to_process.split('.')[0]
 
     # path to forced alignment
-    if os.path.isfile(f"{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.aligned"):
-        aligned = f"{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.aligned"
+    if os.path.isfile(f"{DATA_PLUMCOT}/{serie}/{episode_to_process}.txt"):
+        aligned = f"{DATA_PLUMCOT}/{serie}/{episode_to_process}.txt"
     else:
         print("No aligned file for")
         aligned = ""
@@ -100,9 +100,9 @@ if __name__ == '__main__':
 
     # ## Create temp file with previous transcript
     print("Writing new file")
-    temp_file = open(f"{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.temp", 'w')
+    temp_file = open(f"{DATA_PLUMCOT}/{serie}/{episode_to_process}.temp", 'w')
     
-    with open(f"{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.aligned", 'r') as f:
+    with open(f"{DATA_PLUMCOT}/{serie}/{episode_to_process}.txt", 'r') as f:
         for line in f :
             line = line.strip('\n')
             if len(line.split()) == 8:
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     temp_file.close()
 
     # ## Write new aligned file
-    new_file = open(f"{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.aligned", "w")
+    new_file = open(f"{DATA_PLUMCOT}/{serie}/{episode_to_process}.txt", "w")
 
     # use aligned sentences to write the new aligned file
     for sentence in sentences:
