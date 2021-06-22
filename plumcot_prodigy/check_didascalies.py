@@ -6,7 +6,6 @@ from plumcot_prodigy.custom_loaders import *
 from prodigy.components.preprocess import add_tokens, fetch_media
 from prodigy.util import file_to_b64
 from typing import Dict, List, Text
-from pathlib import Path
 
 import random
 import os
@@ -32,7 +31,7 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     return examples
 
 
-def stream_text(episode, conf):
+def stream_text(episode, conf, user_path):
     """ Displays sentences with confidence index under conf argument.
     
         Arguments : ep : episode to annotate,
@@ -42,8 +41,7 @@ def stream_text(episode, conf):
     """
     
     # path to Plumcot data
-    #DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
-    DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "test_data/"
+    DATA_PLUMCOT = user_path
     
     # process serie or film
     if len(episode.split('.')) == 3:
@@ -121,9 +119,10 @@ def stream_text(episode, conf):
     dataset=("The dataset to save to", "positional", None, str),
     episode=("Episode to annotate (e.g : TheWalkingDead.Season01.Episode01)", "positional", None, str),
     conf=("Display sentences under this confidence score", "positional", None, float),
+    user_path=("Path to corpus directory", "positional", None, str),
 )
      
-def select_text(dataset: Text, episode: Text, conf: float) -> Dict:      
+def select_text(dataset: Text, episode: Text, conf: float, user_path : Text) -> Dict:      
 
     def disable_left_right(stream, lang="en"):  
         """
@@ -163,7 +162,7 @@ def select_text(dataset: Text, episode: Text, conf: float) -> Dict:
             yield eg
                 
     #stream
-    stream = stream_text(episode, conf)   
+    stream = stream_text(episode, conf, user_path)   
     stream = disable_left_right(stream) 
 
     return {

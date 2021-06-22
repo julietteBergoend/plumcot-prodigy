@@ -2,7 +2,7 @@
 # coding: utf-8
 
 """Usage:
-process_didascalies.py <episode> <data_base_name>
+process_didascalies.py <episode> <data_base_name> <user_path>
 """
 
 # ### Delete didascalies in show transcripts (.txt files)
@@ -16,12 +16,12 @@ from pathlib import Path
 # path to databases
 DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
 
-# path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "test_data"
-
 if __name__ == '__main__':
     
     args = docopt(__doc__)
+    
+    # path to Plumcot data
+    DATA_PLUMCOT = args["<user_path>"]
     
     # episode name & json file
     episode_to_process = args["<episode>"]
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
             # load forced alignment
             episode = meta['episode'].split('.')        
-            aligned = f"{DATA_PLUMCOT}/{episode[0]}/forced-alignment/{meta['episode']}.aligned"       
+            aligned = f"{DATA_PLUMCOT}/{episode[0]}/{meta['episode']}.txt"       
             transcript = forced_alignment(aligned)      
             sentences = list(transcript.sents)
 
@@ -101,10 +101,10 @@ if __name__ == '__main__':
     print("Processed episode", episode_list)
 
     # ### Write new transcript file
-    print("\nWRITE NEW FILE\n")
+    print("\nWRITE NEW TRANSCRIPT FILE\n")
     for episode in episode_list:
         # load forced alignment
-        aligned = f"{DATA_PLUMCOT}/{episode.split('.')[0]}/forced-alignment/{episode}.aligned"    
+        aligned = f"{DATA_PLUMCOT}/{episode.split('.')[0]}/{episode}.txt"    
         transcript = forced_alignment(aligned)      
         sentences = list(transcript.sents)
         sentences_str = [str(sentence) for sentence in sentences]
@@ -126,13 +126,13 @@ if __name__ == '__main__':
                     sentences_str[el[0]] = el[1][1]
 
         # write temp file with the previous version
-        temp_name = f"{DATA_PLUMCOT}/{episode.split('.')[0]}/transcripts/{episode}.temp"
+        temp_name = f"{DATA_PLUMCOT}/{episode.split('.')[0]}/{episode}.temp"
         with open(temp_name, 'w') as writer:
             for sentence in sentences :
                 writer.write(f"{sentence._.speaker} {sentence}\n")
                     
         # write new file
-        name = f"{DATA_PLUMCOT}/{episode.split('.')[0]}/transcripts/{episode}.txt"
+        name = f"{DATA_PLUMCOT}/{episode.split('.')[0]}/{episode}.txt"
         with open(name, 'w') as f:
             writer = f        
             for sentence, str_s in zip(sentences, sentences_str):

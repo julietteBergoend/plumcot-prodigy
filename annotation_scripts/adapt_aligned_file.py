@@ -9,28 +9,27 @@
 #
 
 """Usage:
-process_alignment.py <episode_name>
+process_alignment.py <episode_name> <user_path>
 """
 import os
 
 from docopt import docopt
-from pathlib import Path
-
-# path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
 
 if __name__ == '__main__':
     
     args = docopt(__doc__)
     
+    # path to Plumcot data
+    DATA_PLUMCOT = args["<user_path>"]
+    
     episode = args["<episode_name>"]
     show = episode.split('.')[0]
     
     # path to aligned file
-    aligned_path = f'{DATA_PLUMCOT}/{show}/forced-alignment/{episode}.aligned'
+    aligned_path = f'{DATA_PLUMCOT}/{show}/{episode}.txt'
     
     # temp file to write previous aligned file
-    temp_file = open(f'{DATA_PLUMCOT}/{show}/forced-alignment/{episode}.temp', 'w')
+    temp_file = open(f'{DATA_PLUMCOT}/{show}/{episode}.temp', 'w')
     
     # write temp file
     with open(aligned_path, 'r') as f:
@@ -40,10 +39,10 @@ if __name__ == '__main__':
     temp_file.close()
 
     # write new aligned file 
-    print(f"Writing new aligned file to {DATA_PLUMCOT}/{show}/forced-alignment/")
-    temp_path = f'{DATA_PLUMCOT}/{show}/forced-alignment/{episode}.temp'
+    print(f"Writing new aligned file to {DATA_PLUMCOT}/{show}/")
+    temp_path = f'{DATA_PLUMCOT}/{show}/{episode}.temp'
     
-    aligned_file = open(f'{DATA_PLUMCOT}/{show}/forced-alignment/{episode}.aligned', 'w')
+    aligned_file = open(f'{DATA_PLUMCOT}/{show}/{episode}.txt', 'w')
     
     with open(temp_path, 'r') as f:
         for line in f :

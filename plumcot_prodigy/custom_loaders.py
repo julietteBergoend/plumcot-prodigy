@@ -9,17 +9,15 @@ def load_files(series, episode, path):
     forced_alignment = ForcedAlignment()
 
     # path to mkv
-    if os.path.isfile(f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv") : 
-        mkv = f"/vol/work3/lefevre/dvd_extracted/{series}/{episode}.mkv"
-    elif os.path.isfile(f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv") :
-        mkv = f"/vol/work1/maurice/dvd_extracted/{series}/{episode}.mkv"
+    if os.path.isfile(os.path.join(path,f"{series}/{episode}.mkv")) : 
+        mkv = os.path.join(path,f"{series}/{episode}.mkv")
     else:
         print("No mkv file for", episode)
         mkv = ""
 
     # path to forced alignment
-    if os.path.isfile(os.path.join(path,f"{series}/forced-alignment/{episode}.aligned")):
-        aligned = os.path.join(path,f"{series}/forced-alignment/{episode}.aligned")
+    if os.path.isfile(os.path.join(path,f"{series}/{episode}.txt")):
+        aligned = os.path.join(path,f"{series}/{episode}.txt")
     else:
         print("No aligned file for", episode)
         aligned = ""
