@@ -9,7 +9,7 @@
 #
 
 """Usage:
-process_alignment.py <episode_name> <path/to/corpora>
+adapt_aligned_file.py <episode_name> <path/to/corpora>
 """
 import os
 

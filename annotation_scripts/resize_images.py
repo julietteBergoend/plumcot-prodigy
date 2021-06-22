@@ -5,7 +5,7 @@
 
 
 """Usage:
-process_alignment.py <episode_name>
+resize_images.py <episode_name> <path_to_corpora>
 """
 
 import os
@@ -16,13 +16,12 @@ from PIL import Image
 from pathlib import Path
 from docopt import docopt
 
-
-# path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "corpora/"
-
 if __name__ == '__main__':
     
     args = docopt(__doc__)
+    
+    # path to Plumcot data
+    DATA_PLUMCOT = args["<path_to_corpora>"]
     
     episode = args["<episode_name>"]
 

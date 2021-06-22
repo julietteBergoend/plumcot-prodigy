@@ -47,7 +47,7 @@ Recommended name for your database : data_alignment
 ```
 2. Lauch recipe
 ```bash
-(plumcot-prodigy) plumcot-prodigy$ prodigy check_forced_alignment <dataset_name> <episode_name> <path/to/corpora> -F plumcot_prodigy/check_alignment.py
+(plumcot-prodigy) plumcot-prodigy$ prodigy check_forced_alignment <dataset_name> <show_name> <season> <path/to/corpora> -F plumcot_prodigy/check_alignment.py
 
 e.g : prodigy check_forced_alignment data_alignment Lost Season01 /home/toto/corpora/ -F plumcot_prodigy/check_alignment.py
 ```
@@ -81,7 +81,7 @@ Recommended name for your database : data_didascalies
 ```bash
 (plumcot-prodigy) plumcot-prodigy$ prodigy check_didascalies.py data_didascalies <episode> <confidence_index> <path_to_corpora> -F plumcot_prodigy/check_didascalies.py
 
-e.g : prodigy check_didascalies data_didascalies TheWalkingDead.Season01.Episode01 0.3 /home/toto/corpora/ -F plumcot_prodigy/check_didascalies.py
+e.g : prodigy check_didascalies data_didascalies TheWalkingDead.Season01.Episode01 0.3 /home/toto/corpora -F plumcot_prodigy/check_didascalies.py
 ```
 When selection is finished, press _x_ (or _reject_).
 If no selection is necessary, press _a_ (or _accept_) or _space_ (or _ignore_).
@@ -120,9 +120,9 @@ Corresponding script : [resize_images](https://github.com/julietteBergoend/plumc
 
 Usage:
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./resize_images <episode_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./resize_images <episode_name> <path/to/corpora>
 
-e.g : ./resize_images 24.Season01.Episode01
+e.g : ./resize_images 24.Season01.Episode01 /home/toto/corpora
 ```
 #### Select_character
 ![select_characters](../screenshots/select_chars.png)
