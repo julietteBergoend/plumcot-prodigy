@@ -77,9 +77,9 @@ Prodigy displays all the sentences in the current episode with confidence index 
 Recommended name for your database : data_didascalies
 2. Lauch the recipe :
 ```bash
-(plumcot-prodigy) plumcot-prodigy$ prodigy check_didascalies.py data_didascalies <show_name> <season> <episode> <confidence_index> -F plumcot_prodigy/check_didascalies.py
+(plumcot-prodigy) plumcot-prodigy$ prodigy check_didascalies.py data_didascalies <episode> <confidence_index> -F plumcot_prodigy/check_didascalies.py
 
-e.g : prodigy check_didascalies data_didascalies TheWalkingDead Season01 Episode01 0.3 -F plumcot_prodigy/check_didascalies.py
+e.g : prodigy check_didascalies data_didascalies TheWalkingDead.Season01.Episode01 0.3 -F plumcot_prodigy/check_didascalies.py
 ```
 When selection is finished, press _x_ (or _reject_).
 If no selection is necessary, press _a_ (or _accept_) or _space_ (or _ignore_).
