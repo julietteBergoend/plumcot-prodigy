@@ -2,7 +2,7 @@
 # coding: utf-8
 
 """Usage:
-add_entity_linking.py <episode> <data_base_name>
+add_entity_linking.py <episode> <data_base_name> <path_to_corpora>
 """
 
 ### Adding Entity Linking annotations (3rd person & names) - fgyrom Prodi
@@ -13,18 +13,16 @@ import os
 import json
 from forced_alignment import ForcedAlignment
 from docopt import docopt
-from pathlib import Path
-
 
 # path to databases
 DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
 
-# path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
-
 if __name__ == '__main__':
     
     args = docopt(__doc__)
+    
+    # path to Plumcot data
+    DATA_PLUMCOT = args["<path_to_corpora>"]
     
     # episode name & json file
     episode = args["<episode>"]
@@ -34,11 +32,11 @@ if __name__ == '__main__':
         json_list = list(json_file)
 
     serie = episode.split('.')[0]
-    episode_path = f'{DATA_PLUMCOT}/{serie}/forced-alignment/{episode}.aligned'
+    episode_path = f'{DATA_PLUMCOT}/{serie}/{episode}.txt'
 
 
     # ### Create temp file & load sentences
-    temp_file = open(f'{DATA_PLUMCOT}/{serie}/forced-alignment/{episode}.temp', 'w')
+    temp_file = open(f'{DATA_PLUMCOT}/{serie}/{episode}.temp', 'w')
     with open(episode_path, 'r') as f:
         for line in f :
             line = line.strip('\n')
@@ -50,7 +48,7 @@ if __name__ == '__main__':
 
     # load aligned sentences
     forced_alignment = ForcedAlignment()
-    episode_path = f'{DATA_PLUMCOT}/{serie}/forced-alignment/{episode}.temp'
+    episode_path = f'{DATA_PLUMCOT}/{serie}/{episode}.temp'
     episode_sentences = forced_alignment(episode_path)
     sentences = list(episode_sentences.sents)
 
@@ -137,8 +135,8 @@ if __name__ == '__main__':
 
     # ### Update alignment file
 
-    new_file = open(f"{DATA_PLUMCOT}/{serie}/forced-alignment/{episode}.aligned", "w")
-    print(f"Writing alignment file to {DATA_PLUMCOT}/{serie}/forced-alignment")
+    new_file = open(f"{DATA_PLUMCOT}/{serie}/{episode}.txt", "w")
+    print(f"Writing alignment file to {DATA_PLUMCOT}/{serie}")
     for sentence in sentences:
         for word in sentence:
             confidence = "{:.2f}".format(word._.confidence)

@@ -11,12 +11,11 @@ from pathlib import Path
         Displays five speech turns with preselected relations in Prodigy relations_view
         
         Arguments : ep : episode to annotate (e.g TheWalkingDead.Season01.Episode01),
+                    user_path : path to Plumot corpus
             
-    Start prodigy : prodigy addressee addressee_data <episode_name -F plumcot_prodigy/adressee.py       
+    Start prodigy : prodigy addressee addressee_data <episode_name> <path_to_corpora> -F plumcot_prodigy/adressee.py       
 
 """
-# path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
 
 def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     """Remove (heavy) "video" and "pictures" key from examples before saving to Prodigy database
@@ -110,24 +109,28 @@ def relations(liste):
     # [(locutor, (sentence with addressee, addressee), ...]    
     return relations_list
 
-def speech_turns(ep):
+def speech_turns(episode, user_path):
     """ 
         Annotate addresses within 5 speech turns.
                 
         Arguments : ep : episode to annotate (e.g TheWalkingDead.Season01.Episode01),
+                    user_path : path to Plumcot corpora
             
-        Start prodigy : prodigy addressee addressee_data <episode_name> -F plumcot_prodigy/adressee.py
+        Start prodigy : prodigy addressee addressee_data <episode_name> <user_path> -F plumcot_prodigy/adressee.py
         
     """
-    show = ep.split('.')[0]
-    season = ep.split('.')[1]
-    ep = ep.split('.')[2]
+    # path to Plumcot data
+    DATA_PLUMCOT = user_path
+    
+    show = episode.split('.')[0]
+    season = episode.split('.')[1]
+    ep = episode.split('.')[2]
     
     # labels to display in relations
     label_list = []
     
     # load episode list
-    episodes_list = load_episodes(DATA_PLUMCOT, show, season, ep)
+    episodes_list = [episode]
 
     for episode in episodes_list:
         print("\nCurrent Episode :", episode)
@@ -312,9 +315,10 @@ def speech_turns(ep):
 @prodigy.recipe("addressee",
                dataset=("The dataset to save to", "positional", None, str),
                episode=("Episode to annotate (e.g : TheWalkingDead.Season01.Episode01", "positional", None, str),
+               user_path=("Path to Plumcot corpora", "positional", None, str),
                )
 
-def addresse(dataset: Text, episode: Text) -> Dict:
+def addresse(dataset: Text, episode: Text, user_path: Text) -> Dict:
 
     blocks = [
         {"view_id": "audio"},
@@ -322,7 +326,7 @@ def addresse(dataset: Text, episode: Text) -> Dict:
     ]
 
     # call stream
-    stream = speech_turns(episode)    
+    stream = speech_turns(episode, user_path)    
     
     # create labels list
     episode = None    

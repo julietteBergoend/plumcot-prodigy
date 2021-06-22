@@ -15,12 +15,9 @@ from pathlib import Path
         
         Arguments : ep : episode to annotate (e.g TheWalkingDead.Season01.Episode01),
             
-    Start prodigy : prodigy entity_linking entity_data <episode_name> -F plumcot_prodigy/entity.py     
+    Start prodigy : prodigy entity_linking entity_data <episode_name> <path_to_corpora> -F plumcot_prodigy/entity.py     
 
 """
-# path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
-
 def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
     """Remove (heavy) "video" and "pictures" key from examples before saving to Prodigy database
     Parameters
@@ -40,14 +37,16 @@ def remove_video_before_db(examples: List[Dict]) -> List[Dict]:
 
     return examples
 
-def entity_linking(ep):
+def entity_linking(episode, user_path):
     
-    show = ep.split('.')[0]
-    season = ep.split('.')[1]
-    ep = ep.split('.')[2]
+    DATA_PLUMCOT = user_path
+    
+    show = episode.split('.')[0]
+    season = episode.split('.')[1]
+    ep= episode.split('.')[2]
     
     # load episode
-    episodes_list = load_episodes(DATA_PLUMCOT, show, season, ep)
+    episodes_list = [episode]
     
     for episode in episodes_list:
         print("\nCurrent Episode :", episode)
@@ -151,7 +150,7 @@ def entity_linking(ep):
                 to_return["spans"] = spans  
 
                 # get characters of the show
-                with open(f"/vol/work1/bergoend/pyannote-db-plumcot/Plumcot/data/{series}/characters.txt", "r") as f:
+                with open(f"{DATA_PLUMCOT}/{series}/characters.txt", "r") as f:
                     speakers = [line.split(",")[0] for line in f.readlines()]
                     
                 # get video (add context)
@@ -194,13 +193,14 @@ def entity_linking(ep):
 @prodigy.recipe("entity_linking",
                dataset=("The dataset to save to", "positional", None, str),
                episode=("Episode to annotate (e.g : TheWalkingDead.Season01.Episode01", "positional", None, str),
+               user_path=("Path to Plumcot corpora", "positional", None, str),
                )
-def addresse(dataset: Text, episode: Text) -> Dict:
+def addresse(dataset: Text, episode: Text, user_path: Text) -> Dict:
     
     blocks = [
         {"view_id": "audio"}, {"view_id": "relations"},{"view_id": "text_input", "field_id": "input_1", "field_placeholder":"Type here for EL1..."},{"view_id": "text_input", "field_id": "input_2", "field_placeholder":"Type here for EL2..."}, {"view_id": "text_input", "field_id": "input_3", "field_placeholder":"Type here for EL3..."},
     ]
-    stream = entity_linking(episode)
+    stream = entity_linking(episode, user_path)
     
     return {
         "dataset": dataset,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 """Usage:
-process_didascalies.py <episode> <data_base_name>
+process_addressee.py <episode> <data_base_name> <path_to_corpora>
 """
 
 import os
@@ -12,9 +12,6 @@ from pathlib import Path
 
 # path to databases
 DATABASE_PATH = Path(__file__).absolute().parent.parent / "prodigy_databases"
-
-# path to Plumcot data
-DATA_PLUMCOT = Path(__file__).absolute().parent.parent.parent / "pyannote-db-plumcot/Plumcot/data/"
 
 # custom dictionary to store multiple values in one key
 # helpful for sentences with multiple addressees
@@ -32,6 +29,9 @@ if __name__ == '__main__':
     
     args = docopt(__doc__)
     
+    # path to Plumcot data
+    DATA_PLUMCOT = args["<path_to_corpora>"]
+
     # episode name & json file
     episode_to_process = args["<episode>"]
     database_name = args["<data_base_name>"]
@@ -40,10 +40,10 @@ if __name__ == '__main__':
         json_list = list(json_file)
 
     serie = episode_to_process.split('.')[0]
-    episode_path = f'{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.aligned'
+    episode_path = f'{DATA_PLUMCOT}/{serie}/{episode_to_process}.txt'
 
     # ## Create temp file
-    temp_file = open(f'{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.temp', 'w')
+    temp_file = open(f'{DATA_PLUMCOT}/{serie}/{episode_to_process}.temp', 'w')
     with open(episode_path, 'r') as f:
         for line in f :
             line = line.strip('\n')
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     # load aligned transcript
     forced_alignment = ForcedAlignment()
-    episode_path = f'{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.temp'
+    episode_path = f'{DATA_PLUMCOT}/{serie}/{episode_to_process}.temp'
     episode_sentences = forced_alignment(episode_path)
     sentences = list(episode_sentences.sents)
 
@@ -163,8 +163,8 @@ if __name__ == '__main__':
 
 
     # ## Write new alignment file
-    print(f"Writing alignment file to {DATA_PLUMCOT}/{serie}/forced-alignment")
-    new_file = open(f"{DATA_PLUMCOT}/{serie}/forced-alignment/{episode_to_process}.aligned", "w")
+    print(f"Writing alignment file to {DATA_PLUMCOT}/{serie}")
+    new_file = open(f"{DATA_PLUMCOT}/{serie}/{episode_to_process}.txt", "w")
 
     for sentence in sentences:
         for word in sentence:

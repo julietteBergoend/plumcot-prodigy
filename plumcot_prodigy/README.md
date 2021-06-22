@@ -211,7 +211,7 @@ Addressee annotation consists in making relations between sentences and speakers
 1. Create a database
 2. Lauch recipe
 ```bash
-(plumcot-prodigy) plumcot-prodigy$ prodigy addressee addressee_data <episode_name> -F plumcot_prodigy/adressee.py
+(plumcot-prodigy) plumcot-prodigy$ prodigy addressee addressee_data <episode_name> <path_to_corpora> -F plumcot_prodigy/adressee.py
 ```
 The head of the relation is always a speaker whereas the child of the relation is always a sentence (see first illustration).
 Relations are pre-selected but you may need to correct it manually.
@@ -226,7 +226,7 @@ Press _space_ when no annotations are done/needed.
 3. Save your annotations
 4. Process your annotations
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./process_addressee.py <episode> <data_base_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./process_addressee.py <episode> <data_base_name> <path_to_corpora>
 ```
 ```bash
 (aligned file)
@@ -291,9 +291,9 @@ Usage:
 Warning : each key in a dictionary corresponds to a firstname/name/nickame, and each value to a character id under the format firstname_name. Those ids must be present in _characters.txt_ file of the show you are annotating (Plumcot/data/{serie_uri}/characters.txt).
 4. Lauch script
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./add_entity_linking.py <episode_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$ ./add_entity_linking.py <episode_name> <path_to_corpora>
 
-e.g ./add_entity_linking.py TheWalkingDead.Season01.Episode02
+e.g ./add_entity_linking.py TheWalkingDead.Season01.Episode02 /home/toto/corpora
 ```
 The script will add EL to your alignment file.
 
@@ -309,7 +309,7 @@ Usage:
 1. Create a new database
 2. Lauch recipe
 ```bash
-(plumcot-prodigy) plumcot-prodigy$ prodigy entity_linking entity_data <episode_name> -F plumcot_prodigy/entity.py
+(plumcot-prodigy) plumcot-prodigy$ prodigy entity_linking <database_name> <episode_name> <path_to_corpora> -F plumcot_prodigy/entity.py
 ```
 The recipe displays sentences one by one, and pre-selects nouns and pronouns.
 If preselections are not nouns or pronouns, skip the example (_space_).
@@ -319,9 +319,9 @@ If preselections are nouns or pronouns, corresponding to multiple characters, en
 3. Save your annotations
 4. Process your annotations
 ```bash
-(plumcot-prodigy) plumcot-prodigy/annotation_scripts$./process_entities.py <episode_name> <database_name>
+(plumcot-prodigy) plumcot-prodigy/annotation_scripts$./process_entities.py <episode_name> <database_name> <path_to_corpora>
 
-e.g : ./process_entities.py TheWalkingDead.Season01.Episode02 test.jsonl
+e.g : ./process_entities.py TheWalkingDead.Season01.Episode02 test.jsonl /home/toto/corpora
 ```
 ```bash
 (aligned file)
